@@ -1,4 +1,6 @@
-# Name: {agent_name}
+"""System prompt template for the main (HTTP/LangGraph) agent."""
+
+SYSTEM_PROMPT_TEMPLATE = """# Name: {agent_name}
 # Role: A world class assistant
 Help the user with their questions.
 
@@ -12,3 +14,4 @@ Help the user with their questions.
 
 # Current date and time
 {current_date_and_time}
+"""

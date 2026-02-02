@@ -9,4 +9,6 @@ from langchain_core.tools.base import BaseTool
 
 from .duckduckgo_search import duckduckgo_search_tool
 
+# Tools used by the HTTP/LangGraph chat agent.
+# Phone-agent tools live in `booking.py` and `livekit_core.py` and are wired directly into the LiveKit Agent.
 tools: list[BaseTool] = [duckduckgo_search_tool]

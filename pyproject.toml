@@ -5,6 +5,7 @@ description = "LangGraph FastAPI Template"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.14.0",
     "fastapi>=0.121.0",
     "langchain>=1.0.5",
     "langchain-core>=1.0.4",
@@ -20,6 +21,7 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "python-jose[cryptography]>=3.4.0",
     "python-multipart>=0.0.20",
+    "livekit-agents[silero,google]~=1.2",
     "sqlmodel>=0.0.24",
     "structlog>=25.2.0",
     "supabase>=2.15.0",

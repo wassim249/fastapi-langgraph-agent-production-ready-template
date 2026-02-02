@@ -154,6 +154,16 @@ class Settings:
         self.MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2000"))
         self.MAX_LLM_CALL_RETRIES = int(os.getenv("MAX_LLM_CALL_RETRIES", "3"))
 
+        # LiveKit Phone Agent Configuration
+        # Note: LiveKit credentials are injected by LiveKit Cloud when deployed; for local use set these in your env.
+        self.LIVEKIT_PHONE_AGENT_NAME = os.getenv("LIVEKIT_PHONE_AGENT_NAME", "lumos_phone_agent")
+        self.LIVEKIT_PHONE_AGENT_VOICE = os.getenv("LIVEKIT_PHONE_AGENT_VOICE", "Despina")
+        # If True, registers the worker with an explicit agent_name which disables automatic dispatch.
+        # For inbound SIP calls, you must configure a SIP dispatch rule with room_config.agents including this agent_name.
+        self.LIVEKIT_PHONE_AGENT_EXPLICIT_DISPATCH = os.getenv(
+            "LIVEKIT_PHONE_AGENT_EXPLICIT_DISPATCH", "false"
+        ).lower() in ("true", "1", "t", "yes")
+
         # Long term memory Configuration
         self.LONG_TERM_MEMORY_MODEL = os.getenv("LONG_TERM_MEMORY_MODEL", "gpt-5-nano")
         self.LONG_TERM_MEMORY_EMBEDDER_MODEL = os.getenv("LONG_TERM_MEMORY_EMBEDDER_MODEL", "text-embedding-3-small")
@@ -181,6 +191,16 @@ class Settings:
         # Rate Limiting Configuration
         self.RATE_LIMIT_DEFAULT = parse_list_from_env("RATE_LIMIT_DEFAULT", ["200 per day", "50 per hour"])
 
+        # LiveKit Configuration
+        self.LIVEKIT_URL = os.getenv("LIVEKIT_URL", "")
+        self.LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY", "")
+        self.LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET", "")
+
+        # Google API Configuration (for Gemini Live)
+        # Note: Either GOOGLE_API_KEY (for Gemini API) or GOOGLE_APPLICATION_CREDENTIALS (for Vertex AI) is required
+        self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+        self.GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+
         # Rate limit endpoints defaults
         default_endpoints = {
             "chat": ["30 per minute"],
@@ -190,6 +210,8 @@ class Settings:
             "login": ["20 per minute"],
             "root": ["10 per minute"],
             "health": ["20 per minute"],
+            "crud_read": ["60 per minute"],
+            "crud_write": ["30 per minute"],
         }
 
         # Update rate limit endpoints from environment variables

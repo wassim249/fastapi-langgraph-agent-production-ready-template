@@ -28,6 +28,15 @@ dev:
 	@echo "Starting server in development environment"
 	@bash -c "source scripts/set_env.sh development && uv run uvicorn app.main:app --reload --port 8000 --loop uvloop"
 
+# LiveKit phone agent commands
+phone-agent-dev:
+	@echo "Starting LiveKit phone agent (dev mode)"
+	@bash -c "source scripts/set_env.sh development && uv run phone_agent.py dev"
+
+phone-agent-console:
+	@echo "Starting LiveKit phone agent (console mode)"
+	@bash -c "source scripts/set_env.sh development && uv run phone_agent.py console"
+
 # Evaluation commands
 eval:
 	@echo "Running evaluation with interactive mode"

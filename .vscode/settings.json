@@ -24,7 +24,7 @@
     },
     "python.analysis.autoImportCompletions": true,
     "python.analysis.indexing": true,
-    "python.languageServer": "Pylance",
+    "python.languageServer": "Jedi",
     "python.analysis.completeFunctionParens": true,
     "editor.rulers": [
         {
