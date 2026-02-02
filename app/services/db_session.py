@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.core.config import settings
-from app.core.logging import logger
+from app.agents.config import settings
+from app.agents.logging import logger
 
 DATABASE_URL = (
     f"postgresql+psycopg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"

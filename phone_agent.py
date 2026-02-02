@@ -4,7 +4,7 @@ Important: This file is named `phone_agent.py` (not `app.py`) to avoid shadowing
 the `app/` Python package in this repository.
 """
 
-from app.core.langgraph.phone_agent.executor import run
+from app.agents.phone_agent.executor import run
 
 if __name__ == "__main__":
     run()

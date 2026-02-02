@@ -17,8 +17,8 @@ from tqdm import tqdm
 
 # Fix import path for app module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from app.core.config import settings
-from app.core.logging import logger
+from app.agents.config import settings
+from app.agents.logging import logger
 from evals.helpers import (
     calculate_avg_scores,
     generate_report,

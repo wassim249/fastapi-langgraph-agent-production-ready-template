@@ -159,10 +159,6 @@ class Settings:
         self.LIVEKIT_PHONE_AGENT_NAME = os.getenv("LIVEKIT_PHONE_AGENT_NAME", "lumos_phone_agent")
         self.LIVEKIT_PHONE_AGENT_VOICE = os.getenv("LIVEKIT_PHONE_AGENT_VOICE", "Despina")
         # If True, registers the worker with an explicit agent_name which disables automatic dispatch.
-        # For inbound SIP calls, you must configure a SIP dispatch rule with room_config.agents including this agent_name.
-        self.LIVEKIT_PHONE_AGENT_EXPLICIT_DISPATCH = os.getenv(
-            "LIVEKIT_PHONE_AGENT_EXPLICIT_DISPATCH", "false"
-        ).lower() in ("true", "1", "t", "yes")
 
         # Long term memory Configuration
         self.LONG_TERM_MEMORY_MODEL = os.getenv("LONG_TERM_MEMORY_MODEL", "gpt-5-nano")
@@ -200,6 +196,10 @@ class Settings:
         # Note: Either GOOGLE_API_KEY (for Gemini API) or GOOGLE_APPLICATION_CREDENTIALS (for Vertex AI) is required
         self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
         self.GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+
+        # Twilio Configuration
+        self.TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+        self.TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 
         # Rate limit endpoints defaults
         default_endpoints = {

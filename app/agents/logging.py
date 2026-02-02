@@ -20,7 +20,7 @@ from typing import (
 
 import structlog
 
-from app.core.config import (
+from app.agents.config import (
     Environment,
     settings,
 )

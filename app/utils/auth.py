@@ -13,8 +13,8 @@ from jose import (
     jwt,
 )
 
-from app.core.config import settings
-from app.core.logging import logger
+from app.agents.config import settings
+from app.agents.logging import logger
 from app.schemas.auth import Token
 from app.utils.sanitization import sanitize_string
 

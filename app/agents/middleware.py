@@ -11,12 +11,12 @@ from jose import (
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.core.config import settings
-from app.core.logging import (
+from app.agents.config import settings
+from app.agents.logging import (
     bind_context,
     clear_context,
 )
-from app.core.metrics import (
+from app.agents.metrics import (
     db_connections,
     http_request_duration_seconds,
     http_requests_total,

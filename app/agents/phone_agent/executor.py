@@ -17,9 +17,9 @@ from livekit.plugins import (
     silero,
 )
 
-from app.core.config import settings
-from app.core.langgraph.phone_agent.agent import create_phone_agent
-from app.core.logging import logger
+from app.agents.config import settings
+from app.agents.logging import logger
+from app.agents.phone_agent.agent import create_phone_agent
 
 
 def _prewarm(proc: JobProcess) -> None:

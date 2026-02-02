@@ -9,7 +9,7 @@ from fastapi import APIRouter
 from app.api.v1.auth import router as auth_router
 from app.api.v1.chatbot import router as chatbot_router
 from app.api.v1.crud import router as crud_router
-from app.core.logging import logger
+from app.agents.logging import logger
 
 api_router = APIRouter()
 

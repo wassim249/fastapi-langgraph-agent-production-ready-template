@@ -11,7 +11,7 @@ from fastapi.security import (
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.core.logging import (
+from app.agents.logging import (
     bind_context,
     logger,
 )

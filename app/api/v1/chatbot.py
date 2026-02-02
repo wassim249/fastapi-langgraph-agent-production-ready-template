@@ -16,11 +16,11 @@ from fastapi import (
 from fastapi.responses import StreamingResponse
 
 from app.api.v1.auth import get_current_session
-from app.core.config import settings
-from app.core.langgraph.graph import LangGraphAgent
-from app.core.limiter import limiter
-from app.core.logging import logger
-from app.core.metrics import llm_stream_duration_seconds
+from app.agents.config import settings
+from app.agents.graph import LangGraphAgent
+from app.agents.limiter import limiter
+from app.agents.logging import logger
+from app.agents.metrics import llm_stream_duration_seconds
 from app.models.session import Session
 from app.schemas.chat import (
     ChatRequest,

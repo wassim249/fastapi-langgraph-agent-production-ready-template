@@ -2,9 +2,9 @@
 
 from datetime import datetime
 
-from app.core.config import settings
-from app.core.prompts.phone_agent import PHONE_AGENT_PROMPT_TEMPLATE
-from app.core.prompts.system import SYSTEM_PROMPT_TEMPLATE
+from app.agents.config import settings
+from app.agents.prompts.phone_agent import PHONE_AGENT_PROMPT_TEMPLATE
+from app.agents.prompts.system import SYSTEM_PROMPT_TEMPLATE
 
 
 def _format_prompt(template: str, **kwargs) -> str:

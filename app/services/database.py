@@ -15,11 +15,11 @@ from sqlmodel import (
     select,
 )
 
-from app.core.config import (
+from app.agents.config import (
     Environment,
     settings,
 )
-from app.core.logging import logger
+from app.agents.logging import logger
 from app.models.session import Session as ChatSession
 from app.models.user import User
 

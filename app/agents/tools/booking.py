@@ -9,7 +9,7 @@ from livekit.agents import (
     function_tool,
 )
 
-from app.core.logging import logger
+from app.agents.logging import logger
 
 
 @function_tool

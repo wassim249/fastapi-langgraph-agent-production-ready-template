@@ -10,9 +10,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.core.config import settings
-from app.core.limiter import limiter
-from app.core.logging import logger
+from app.agents.config import settings
+from app.agents.limiter import limiter
+from app.agents.logging import logger
 from app.models.common import utc_now
 from app.services.db_session import get_async_session
 

@@ -6,7 +6,7 @@ from livekit.agents import (
     function_tool,
 )
 
-from app.core.logging import logger
+from app.agents.logging import logger
 
 AGENT_INSTRUCTIONS = """You are Lumi, a friendly booking assistant for a Lumos Beauty Salon.
 You are responsible for helping the user to book appointments with the salon.
