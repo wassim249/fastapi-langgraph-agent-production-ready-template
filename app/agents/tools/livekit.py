@@ -13,16 +13,10 @@ from app.agents.logging import logger
 
 @function_tool
 async def end_call(context: RunContext) -> str:
-    """End the call gracefully.
+    """Called when the user wants to end the call or says goodbye.
 
-    Note: In many telephony setups, the agent saying goodbye and becoming silent is sufficient.
-    If you later want hard hangup behavior, wire that via SIP provider settings or session APIs.
+    Returns:
+        Farewell message
     """
-    _ = context
-    logger.info("phone_agent_end_call_requested")
-    return "Thank you for calling. Have a great day. Goodbye."
-
-
-LIVEKIT_CORE_TOOLS = [
-    end_call,
-]
+    logger.info("User requested to end call")
+    return "Thank you for calling! Have a great day. Goodbye!"

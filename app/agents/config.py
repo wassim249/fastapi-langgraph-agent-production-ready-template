@@ -154,12 +154,6 @@ class Settings:
         self.MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2000"))
         self.MAX_LLM_CALL_RETRIES = int(os.getenv("MAX_LLM_CALL_RETRIES", "3"))
 
-        # LiveKit Phone Agent Configuration
-        # Note: LiveKit credentials are injected by LiveKit Cloud when deployed; for local use set these in your env.
-        self.LIVEKIT_PHONE_AGENT_NAME = os.getenv("LIVEKIT_PHONE_AGENT_NAME", "lumos_phone_agent")
-        self.LIVEKIT_PHONE_AGENT_VOICE = os.getenv("LIVEKIT_PHONE_AGENT_VOICE", "Despina")
-        # If True, registers the worker with an explicit agent_name which disables automatic dispatch.
-
         # Long term memory Configuration
         self.LONG_TERM_MEMORY_MODEL = os.getenv("LONG_TERM_MEMORY_MODEL", "gpt-5-nano")
         self.LONG_TERM_MEMORY_EMBEDDER_MODEL = os.getenv("LONG_TERM_MEMORY_EMBEDDER_MODEL", "text-embedding-3-small")
@@ -196,10 +190,6 @@ class Settings:
         # Note: Either GOOGLE_API_KEY (for Gemini API) or GOOGLE_APPLICATION_CREDENTIALS (for Vertex AI) is required
         self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
         self.GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
-
-        # Twilio Configuration
-        self.TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
-        self.TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 
         # Rate limit endpoints defaults
         default_endpoints = {

@@ -24,7 +24,7 @@
     },
     "python.analysis.autoImportCompletions": true,
     "python.analysis.indexing": true,
-    "python.languageServer": "Jedi",
+    "python.languageServer": "None",
     "python.analysis.completeFunctionParens": true,
     "editor.rulers": [
         {
