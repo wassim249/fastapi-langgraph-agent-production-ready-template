@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to set and manage environment configuration
-# Usage: source ./scripts/set_env.sh [development|staging|production]
+# Usage: source ./scripts/set_env.sh [development|staging|production|test]
 
 # Check if the script is being sourced
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -21,8 +21,8 @@ NC='\033[0m' # No Color
 ENV=${1:-development}
 
 # Validate environment
-if [[ ! "$ENV" =~ ^(development|staging|production)$ ]]; then
-    echo -e "${RED}Error: Invalid environment. Choose development, staging, or production.${NC}"
+if [[ ! "$ENV" =~ ^(development|staging|production|test)$ ]]; then
+    echo -e "${RED}Error: Invalid environment. Choose development, staging, production, or test.${NC}"
     return 1
 fi
 
@@ -111,7 +111,9 @@ echo -e "  ${YELLOW}start_app${NC} - Start the application in $ENV environment"
 alias dev_env="source '$SCRIPT_DIR/set_env.sh' development"
 alias stage_env="source '$SCRIPT_DIR/set_env.sh' staging"
 alias prod_env="source '$SCRIPT_DIR/set_env.sh' production"
+alias test_env="source '$SCRIPT_DIR/set_env.sh' test"
 
 echo -e "  ${YELLOW}dev_env${NC} - Switch to development environment"
 echo -e "  ${YELLOW}stage_env${NC} - Switch to staging environment"
 echo -e "  ${YELLOW}prod_env${NC} - Switch to production environment"
+echo -e "  ${YELLOW}test_env${NC} - Switch to test environment"

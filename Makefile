@@ -56,6 +56,10 @@ lint:
 format:
 	ruff format .
 
+test:
+	@echo "Running tests"
+	@bash -c "source scripts/set_env.sh test && PYTHONPATH=. uv run pytest"
+
 clean:
 	rm -rf .venv
 	rm -rf __pycache__

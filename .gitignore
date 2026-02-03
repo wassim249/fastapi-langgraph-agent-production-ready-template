@@ -15,6 +15,7 @@ wheels/
 .env.development
 .env.staging
 .env.production
+.env.test
 
 # Misc
 *.ipynb

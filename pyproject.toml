@@ -41,18 +41,21 @@ dependencies = [
     "mem0ai>=1.0.0",
     "uvloop>=0.22.1",
     "livekit>=1.0.25",
+    "greenlet>=3.1.1",
 ]
 
 [project.optional-dependencies]
 dev = ["black", "isort", "flake8", "ruff", "djlint==1.36.4"]
 
 [dependency-groups]
-test = ["httpx>=0.28.1", "pytest>=8.3.5"]
+test = ["httpx>=0.28.1", "pytest>=8.3.5", "pytest-asyncio>=0.23.5", "asyncpg>=0.29.0"]
 
 
 [tool.pytest.ini_options]
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 python_files = ["test_*.py", "*_test.py", "tests.py"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.black]
 line-length = 119

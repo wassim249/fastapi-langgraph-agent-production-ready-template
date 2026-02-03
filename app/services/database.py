@@ -64,9 +64,9 @@ class DatabaseService:
                 max_overflow=max_overflow,
             )
         except SQLAlchemyError as e:
-            logger.error("database_initialization_error", error=str(e), environment=settings.ENVIRONMENT.value)
-            # In production, don't raise - allow app to start even with DB issues
-            if settings.ENVIRONMENT != Environment.PRODUCTION:
+            logger.exception("database_initialization_error", error=str(e), environment=settings.ENVIRONMENT.value)
+            # In production/test, don't raise - allow app to start even with DB issues
+            if settings.ENVIRONMENT not in {Environment.PRODUCTION, Environment.TEST}:
                 raise
 
     async def create_user(self, email: str, password: str) -> User:
