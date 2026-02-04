@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Type
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Type
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,6 +25,7 @@ class CrudResource:
     update_schema: Type[SQLModel]
     read_schema: Type[SQLModel]
     id_type: Type
+    create_transform: Optional[Callable[[Dict[str, Any], AsyncSession], Awaitable[Dict[str, Any]]]] = None
 
 
 def build_resource_router(resource: CrudResource) -> APIRouter:
@@ -48,6 +49,8 @@ def build_resource_router(resource: CrudResource) -> APIRouter:
         try:
             validated = resource.create_schema.model_validate(payload)
             data = validated.model_dump()
+            if resource.create_transform is not None:
+                data = await resource.create_transform(data, db_session)
             record = resource.model(**data)
             db_session.add(record)
             await db_session.commit()

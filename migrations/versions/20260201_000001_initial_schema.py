@@ -281,8 +281,18 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.UniqueConstraint("business_id", "user_id", name="customer_profiles_business_user_uniq"),
     )
-    op.create_index("idx_customer_profiles_business_telno", "customer_profiles", ["business_id", "telno"])
-    op.create_index("idx_customer_profiles_business_line", "customer_profiles", ["business_id", "line_user_id"])
+    op.create_index(
+        "idx_customer_profiles_business_telno",
+        "customer_profiles",
+        ["business_id", "telno"],
+        unique=True,
+    )
+    op.create_index(
+        "idx_customer_profiles_business_line",
+        "customer_profiles",
+        ["business_id", "line_user_id"],
+        unique=True,
+    )
     op.create_index("idx_customer_profiles_user", "customer_profiles", ["user_id"])
 
     op.create_table(
@@ -294,6 +304,12 @@ def upgrade() -> None:
             sa.ForeignKey("customer_profiles.id", ondelete="CASCADE"),
             nullable=False,
         ),
+        sa.Column(
+            "business_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("businesses.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("type", user_identifier_type, nullable=False),
         sa.Column("identifier", sa.Text(), nullable=False),
         sa.Column("is_verified", sa.Boolean(), nullable=False, server_default=sa.text("false")),
@@ -301,7 +317,12 @@ def upgrade() -> None:
         sa.Column("status", record_status, nullable=False, server_default="active"),
         sa.Column("metadata", postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("now()")),
-        sa.UniqueConstraint("type", "identifier", name="user_identifiers_type_identifier_uniq"),
+        sa.UniqueConstraint(
+            "business_id",
+            "type",
+            "identifier",
+            name="user_identifiers_business_type_identifier_uniq",
+        ),
     )
     op.create_index("idx_user_identifiers_customer", "user_identifiers", ["customer_id"])
 
@@ -618,6 +639,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("channel_id", sa.Text(), nullable=False),
+        sa.Column("channel_secret", sa.Text(), nullable=False),
+        sa.Column("channel_access_token", sa.Text(), nullable=False),
+        sa.Column("bot_destination_id", sa.Text()),
+        sa.Column("liff_id", sa.Text()),
+        sa.Column("login_channel_id", sa.Text()),
+        sa.Column("login_channel_access_token", sa.Text()),
         sa.Column("connected_status", line_connection_status, nullable=False, server_default="disconnected"),
         sa.Column("webhook_verified", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("config", postgresql.JSONB(), nullable=False, server_default=sa.text("'{}'::jsonb")),

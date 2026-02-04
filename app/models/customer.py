@@ -52,6 +52,7 @@ class UserIdentifier(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     customer_id: UUID
+    business_id: UUID
     type: UserIdentifierType
     identifier: str
     is_verified: bool = Field(default=False)

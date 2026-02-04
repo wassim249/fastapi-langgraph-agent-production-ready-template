@@ -66,6 +66,7 @@ class UserIdentifierBase(SQLModel):
     model_config = ConfigDict(populate_by_name=True)
 
     customer_id: UUID
+    business_id: Optional[UUID] = None
     type: UserIdentifierType
     identifier: str
     is_verified: bool = False
@@ -92,4 +93,5 @@ class UserIdentifierUpdate(SQLModel):
 
 class UserIdentifierRead(UserIdentifierBase):
     id: UUID
+    business_id: UUID
     created_at: datetime

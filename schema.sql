@@ -185,6 +185,7 @@ CREATE TYPE "public"."record_status" AS ENUM ('active', 'blocked', 'deleted');
 CREATE TABLE "public"."user_identifiers" (
     "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "customer_id" uuid NOT NULL,
+    "business_id" uuid NOT NULL,
     "type" "public"."user_identifier_type" NOT NULL,
     "identifier" text NOT NULL,
     "is_verified" bool NOT NULL DEFAULT false,
@@ -408,6 +409,12 @@ CREATE TABLE "public"."line_oa_connections" (
     "id" uuid NOT NULL DEFAULT gen_random_uuid(),
     "business_id" uuid NOT NULL,
     "channel_id" text NOT NULL,
+    "channel_secret" text NOT NULL,
+    "channel_access_token" text NOT NULL,
+    "bot_destination_id" text,
+    "liff_id" text,
+    "login_channel_id" text,
+    "login_channel_access_token" text,
     "connected_status" "public"."line_connection_status" NOT NULL DEFAULT 'disconnected'::line_connection_status,
     "webhook_verified" bool NOT NULL DEFAULT false,
     "config" jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -513,14 +520,15 @@ ALTER TABLE "public"."customer_profiles" ADD FOREIGN KEY ("business_id") REFEREN
 
 -- Indices
 CREATE UNIQUE INDEX customer_profiles_business_user_uniq ON public.customer_profiles USING btree (business_id, user_id);
-CREATE INDEX idx_customer_profiles_business_telno ON public.customer_profiles USING btree (business_id, telno);
-CREATE INDEX idx_customer_profiles_business_line ON public.customer_profiles USING btree (business_id, line_user_id);
+CREATE UNIQUE INDEX idx_customer_profiles_business_telno ON public.customer_profiles USING btree (business_id, telno);
+CREATE UNIQUE INDEX idx_customer_profiles_business_line ON public.customer_profiles USING btree (business_id, line_user_id);
 CREATE INDEX idx_customer_profiles_user ON public.customer_profiles USING btree (user_id);
 ALTER TABLE "public"."user_identifiers" ADD FOREIGN KEY ("customer_id") REFERENCES "public"."customer_profiles"("id") ON DELETE CASCADE;
+ALTER TABLE "public"."user_identifiers" ADD FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE CASCADE;
 
 
 -- Indices
-CREATE UNIQUE INDEX user_identifiers_type_identifier_uniq ON public.user_identifiers USING btree (type, identifier);
+CREATE UNIQUE INDEX user_identifiers_business_type_identifier_uniq ON public.user_identifiers USING btree (business_id, type, identifier);
 CREATE INDEX idx_user_identifiers_customer ON public.user_identifiers USING btree (customer_id);
 ALTER TABLE "public"."weekly_availability_rules" ADD FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."weekly_availability_rules" ADD FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE CASCADE;
