@@ -1,5 +1,6 @@
 """Long-term memory service using mem0 and pgvector with optional cache layer."""
 
+from langchain_core.messages import BaseMessage
 from mem0 import AsyncMemory
 
 from app.core.cache import (
@@ -8,6 +9,8 @@ from app.core.cache import (
 )
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.prompts import load_memory_capture_prompt
+from app.utils import latest_turn_text
 
 
 class MemoryService:
@@ -40,6 +43,7 @@ class MemoryService:
                         "provider": "openai",
                         "config": {"model": settings.LONG_TERM_MEMORY_EMBEDDER_MODEL},
                     },
+                    "custom_fact_extraction_prompt": load_memory_capture_prompt(),
                 }
             )
         return self._memory
@@ -81,11 +85,26 @@ class MemoryService:
             logger.error("failed_to_get_relevant_memory", error=str(e), user_id=user_id, query=query)
             return ""
 
-    async def add(self, user_id: str, messages: list[dict], metadata: dict = None) -> None:
-        """Add messages to long-term memory for a user."""
+    async def add(self, user_id: str, messages: list[BaseMessage]) -> None:
+        """Add the latest user turn to long-term memory.
+
+        Only the latest user message is forwarded to mem0. The assistant reply
+        is deliberately excluded: mem0's extractor concatenates both roles and
+        paraphrases the assistant's suggestions as if the user had volunteered
+        them, producing noisy facts.
+        """
+        user_text, _ = latest_turn_text(messages)
+        user_text = (user_text or "").strip()
+        if not user_text:
+            logger.debug("long_term_memory_skipped_empty_turn", user_id=user_id)
+            return
+
         try:
             memory = await self._get_memory()
-            await memory.add(messages, user_id=str(user_id), metadata=metadata)
+            await memory.add(
+                [{"role": "user", "content": user_text}],
+                user_id=str(user_id),
+            )
             logger.info("long_term_memory_updated_successfully", user_id=user_id)
         except Exception as e:
             logger.exception("failed_to_update_long_term_memory", user_id=user_id, error=str(e))
