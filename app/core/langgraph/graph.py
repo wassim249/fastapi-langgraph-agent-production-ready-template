@@ -300,8 +300,7 @@ class LangGraphAgent:
                 logger.info("graph_interrupted", session_id=session_id, interrupt_value=str(interrupt_value))
                 return [Message(role="assistant", content=str(interrupt_value))]
 
-            mem_metadata = {"session_id": session_id, "environment": settings.ENVIRONMENT.value}
-            asyncio.create_task(memory_service.add(user_id, response["messages"], mem_metadata))
+            asyncio.create_task(memory_service.add(user_id, response["messages"]))
             return self.__process_messages(response["messages"])
         except GraphInterrupt:
             state = await self._graph.aget_state(config)
@@ -378,8 +377,7 @@ class LangGraphAgent:
                 logger.info("graph_interrupted_stream", session_id=session_id, interrupt_value=str(interrupt_value))
                 yield str(interrupt_value)
             elif state.values and "messages" in state.values:
-                mem_metadata = {"session_id": session_id, "environment": settings.ENVIRONMENT.value}
-                asyncio.create_task(memory_service.add(user_id, state.values["messages"], mem_metadata))
+                asyncio.create_task(memory_service.add(user_id, state.values["messages"]))
         except GraphInterrupt:
             state = await self._graph.aget_state(config)
             interrupt_value = state.tasks[0].interrupts[0].value if state.tasks else "Waiting for input."

@@ -43,6 +43,7 @@ class MemoryService:
                         "provider": "openai",
                         "config": {"model": settings.LONG_TERM_MEMORY_EMBEDDER_MODEL},
                     },
+                    "custom_fact_extraction_prompt": load_memory_capture_prompt(),
                 }
             )
         return self._memory
@@ -84,12 +85,7 @@ class MemoryService:
             logger.error("failed_to_get_relevant_memory", error=str(e), user_id=user_id, query=query)
             return ""
 
-    async def add(
-        self,
-        user_id: str,
-        messages: list[BaseMessage],
-        metadata: dict = None,
-    ) -> None:
+    async def add(self, user_id: str, messages: list[BaseMessage]) -> None:
         """Add the latest user turn to long-term memory.
 
         Only the latest user message is forwarded to mem0. The assistant reply
@@ -105,12 +101,9 @@ class MemoryService:
 
         try:
             memory = await self._get_memory()
-            # Re-render per call so {current_date} reflects today's date in long-lived workers.
-            memory.config.custom_fact_extraction_prompt = load_memory_capture_prompt()
             await memory.add(
                 [{"role": "user", "content": user_text}],
                 user_id=str(user_id),
-                metadata=metadata,
             )
             logger.info("long_term_memory_updated_successfully", user_id=user_id)
         except Exception as e:
