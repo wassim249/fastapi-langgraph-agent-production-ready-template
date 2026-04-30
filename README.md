@@ -70,3 +70,50 @@ Report security issues privately — see [SECURITY.md](SECURITY.md).
 ## License
 
 See [LICENSE](LICENSE).
+
+## FAQ
+
+### General
+
+**What is this template?**
+This is a production-ready template for building AI agent backends with FastAPI and LangGraph. It handles stateful conversations, long-term memory, tool calling, observability, rate limiting, and authentication — providing a solid foundation for AI engineers.
+
+**How does this differ from a basic LangGraph setup?**
+This template provides a complete production stack including database migrations (Alembic), long-term memory (mem0 + pgvector), observability (Langfuse + Prometheus), JWT authentication, rate limiting, and structured logging — components you'd typically build separately.
+
+### Setup & Configuration
+
+**Do I need Docker?**
+Docker is recommended for local development (`make docker-up` starts API + PostgreSQL). For local development without Docker, see [docs/getting-started.md](docs/getting-started.md).
+
+**What LLM providers are supported?**
+The LLM service supports any provider compatible with LangChain's `init_chat_model`, including OpenAI, Anthropic, Azure, and local models. Configure via environment variables in `.env.development`.
+
+**How do I configure long-term memory?**
+Long-term memory uses mem0 + pgvector for semantic search per user. Configure your PostgreSQL connection and mem0 API key in `.env.development`. See [docs/memory.md](docs/memory.md) for details.
+
+### Development
+
+**How do I add custom tools?**
+Add your tool implementations in `app/core/langgraph/tools/` and register them in the agent graph configuration. See the existing tools for examples.
+
+**How does the LLM service handle failures?**
+The LLM service implements circular model fallback (tries multiple models in sequence), exponential backoff retries, and a total timeout budget to ensure resilient LLM interactions.
+
+**Can I use this without Langfuse?**
+Yes, Langfuse tracing is optional. Disable it by omitting the Langfuse configuration variables. The agent will still function with structured logging.
+
+### Troubleshooting
+
+**The API won't start**
+- Ensure PostgreSQL is running (`make docker-up` starts it automatically)
+- Check that all required environment variables are set (copy `.env.example` to `.env.development`)
+- Verify database migrations: `make migrate`
+
+**Memory/semantic search not working**
+- Verify pgvector extension is enabled in PostgreSQL
+- Check mem0 API key configuration
+- Ensure embedding model is configured and accessible
+
+**Rate limiting is too aggressive**
+Adjust rate limit configuration in `app/core/middleware.py` or via environment variables. See [docs/configuration.md](docs/configuration.md) for available options.
