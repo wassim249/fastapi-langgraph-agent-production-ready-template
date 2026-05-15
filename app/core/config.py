@@ -147,6 +147,12 @@ class Settings:
 
         # LangGraph Configuration
         self.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+        # Astraflow Configuration (OpenAI-compatible — https://astraflow.ucloud-global.com)
+        self.ASTRAFLOW_API_KEY = os.getenv("ASTRAFLOW_API_KEY", "")
+        self.ASTRAFLOW_BASE_URL = os.getenv("ASTRAFLOW_BASE_URL", "https://api-us-ca.umodelverse.ai/v1")
+        self.ASTRAFLOW_CN_API_KEY = os.getenv("ASTRAFLOW_CN_API_KEY", "")
+        self.ASTRAFLOW_CN_BASE_URL = os.getenv("ASTRAFLOW_CN_BASE_URL", "https://api.modelverse.cn/v1")
         self.DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "gpt-5-mini")
         self.SESSION_NAMING_ENABLED = os.getenv("SESSION_NAMING_ENABLED", "true").lower() == "true"
         self.DEFAULT_LLM_TEMPERATURE = float(os.getenv("DEFAULT_LLM_TEMPERATURE", "0.2"))

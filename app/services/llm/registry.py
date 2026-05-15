@@ -18,6 +18,8 @@ from app.core.logging import logger
 
 _TOKEN_LIMIT: Dict[str, Any] = {"max_completion_tokens": settings.MAX_TOKENS}
 _API_KEY = SecretStr(settings.OPENAI_API_KEY)
+_ASTRAFLOW_API_KEY = SecretStr(settings.ASTRAFLOW_API_KEY)
+_ASTRAFLOW_CN_API_KEY = SecretStr(settings.ASTRAFLOW_CN_API_KEY)
 
 
 class LLMRegistry:
@@ -28,6 +30,30 @@ class LLMRegistry:
     """
 
     LLMS: List[Dict[str, Any]] = [
+        # ---------------------------------------------------------------------------
+        # Astraflow — OpenAI-compatible platform with 200+ models (https://astraflow.ucloud-global.com)
+        # Set DEFAULT_LLM_MODEL=astraflow/default (global) or astraflow-cn/default (China)
+        # to route all traffic through Astraflow instead of OpenAI.
+        # Any model slug supported by Astraflow can be used at call-time via kwargs.
+        # ---------------------------------------------------------------------------
+        {
+            "name": "astraflow/default",
+            "llm": ChatOpenAI(
+                model="gpt-4o-mini",
+                api_key=_ASTRAFLOW_API_KEY,
+                base_url=settings.ASTRAFLOW_BASE_URL,
+                model_kwargs=_TOKEN_LIMIT,
+            ),
+        },
+        {
+            "name": "astraflow-cn/default",
+            "llm": ChatOpenAI(
+                model="gpt-4o-mini",
+                api_key=_ASTRAFLOW_CN_API_KEY,
+                base_url=settings.ASTRAFLOW_CN_BASE_URL,
+                model_kwargs=_TOKEN_LIMIT,
+            ),
+        },
         {
             "name": "gpt-5-mini",
             "llm": ChatOpenAI(
@@ -93,6 +119,21 @@ class LLMRegistry:
 
         if kwargs:
             logger.debug("creating_llm_with_custom_args", model_name=model_name, custom_args=list(kwargs.keys()))
+            # Route Astraflow models through the correct base URL and API key
+            if model_name.startswith("astraflow-cn"):
+                return ChatOpenAI(
+                    model=kwargs.pop("model", model_name),
+                    api_key=_ASTRAFLOW_CN_API_KEY,
+                    base_url=settings.ASTRAFLOW_CN_BASE_URL,
+                    **kwargs,
+                )
+            if model_name.startswith("astraflow"):
+                return ChatOpenAI(
+                    model=kwargs.pop("model", model_name),
+                    api_key=_ASTRAFLOW_API_KEY,
+                    base_url=settings.ASTRAFLOW_BASE_URL,
+                    **kwargs,
+                )
             return ChatOpenAI(model=model_name, api_key=_API_KEY, **kwargs)
 
         logger.debug("using_default_llm_instance", model_name=model_name)
