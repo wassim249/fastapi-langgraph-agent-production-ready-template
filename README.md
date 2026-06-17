@@ -8,9 +8,14 @@ A production-ready template for building AI agent backends with FastAPI and Lang
 
 ## Powered by Atlas Cloud — Drop-in LLM Backend for LangGraph Agents
 
-<a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template">
-  <img src="docs/atlas-cloud-logo.png" alt="Atlas Cloud" width="200"/>
-</a>
+<div align="center">
+  <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/atlas-cloud-logo-dark.png"/>
+      <img src="docs/atlas-cloud-logo.png" alt="Atlas Cloud" width="200"/>
+    </picture>
+  </a>
+</div>
 
 [**Atlas Cloud**](https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template) provides an **OpenAI-compatible LLM API** that integrates seamlessly into this FastAPI + LangGraph template — no code changes to your agent graph needed. Just swap `OPENAI_BASE_URL` and `OPENAI_API_KEY` to access **DeepSeek, Qwen, GLM, Kimi, MiniMax, Gemini, Claude, GPT** and more through a single unified endpoint.
 
