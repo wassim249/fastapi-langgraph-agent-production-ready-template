@@ -9,8 +9,6 @@ On the first message of a new session this module:
      structured output to generate a proper title and overwrites the placeholder.
 """
 
-import asyncio
-
 from langchain_core.messages import HumanMessage, SystemMessage
 from sqlmodel import (
     Session as DBSession,
@@ -25,10 +23,9 @@ from app.models.session import Session as ChatSession
 from app.schemas.chat import SessionTitle
 from app.services.database import database_service
 from app.services.llm import llm_service
+from app.utils import spawn_background_task
 
 _PLACEHOLDER_MAX = 40
-
-_background_tasks: set[asyncio.Task] = set()
 
 
 def _build_placeholder(user_message: str) -> str:
@@ -86,6 +83,4 @@ def maybe_name_session(session_id: str, session_name: str, messages: list) -> No
     if not first_user_msg:
         return
     if _claim_session(session_id, _build_placeholder(first_user_msg)):
-        task = asyncio.create_task(_persist_session_name(session_id, first_user_msg))
-        _background_tasks.add(task)
-        task.add_done_callback(_background_tasks.discard)
+        spawn_background_task(_persist_session_name(session_id, first_user_msg))

@@ -21,3 +21,6 @@ wheels/
 
 # Reports
 evals/reports/
+
+# pycharm
+.idea/

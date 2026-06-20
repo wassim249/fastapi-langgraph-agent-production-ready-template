@@ -6,6 +6,7 @@ Otherwise, falls back to a simple in-memory TTL cache.
 
 import hashlib
 import time
+from collections import OrderedDict
 from typing import (
     TYPE_CHECKING,
     Awaitable,
@@ -33,20 +34,26 @@ else:
 
 
 class InMemoryCacheService:
-    """Simple in-memory TTL cache fallback when Valkey is not available."""
+    """Simple in-memory TTL cache fallback when Valkey is not available.
 
-    def __init__(self, default_ttl: int = 60):
+    Bounded by ``max_size`` with LRU eviction so high-cardinality keys that are
+    written but never re-read cannot grow the process memory without limit.
+    """
+
+    def __init__(self, default_ttl: int = 60, max_size: int = 10000):
         """Initialize in-memory cache.
 
         Args:
             default_ttl: Default time-to-live in seconds for cache entries.
+            max_size: Maximum number of entries retained before LRU eviction.
         """
-        self._cache: dict[str, tuple[float, str]] = {}
+        self._cache: OrderedDict[str, tuple[float, str]] = OrderedDict()
         self._default_ttl = default_ttl
+        self._max_size = max_size
 
     async def initialize(self) -> None:
         """No-op for in-memory cache."""
-        logger.info("cache_initialized", backend="in_memory", ttl=self._default_ttl)
+        logger.info("cache_initialized", backend="in_memory", ttl=self._default_ttl, max_size=self._max_size)
 
     async def get(self, key: str) -> Optional[str]:
         """Get a value from cache.
@@ -64,6 +71,8 @@ class InMemoryCacheService:
         if time.monotonic() > expires_at:
             del self._cache[key]
             return None
+        # Mark as most-recently-used for LRU ordering.
+        self._cache.move_to_end(key)
         return value
 
     async def set(self, key: str, value: str, ttl: Optional[int] = None) -> None:
@@ -76,6 +85,10 @@ class InMemoryCacheService:
         """
         expires_at = time.monotonic() + (ttl or self._default_ttl)
         self._cache[key] = (expires_at, value)
+        self._cache.move_to_end(key)
+        # Evict least-recently-used entries once the cache is over capacity.
+        while len(self._cache) > self._max_size:
+            self._cache.popitem(last=False)
 
     async def delete(self, key: str) -> None:
         """Delete a value from cache.
@@ -191,7 +204,7 @@ def _create_cache_service() -> InMemoryCacheService | ValkeyCacheService:
             hint="install with: uv add redis --optional cache",
         )
 
-    return InMemoryCacheService(default_ttl=ttl)
+    return InMemoryCacheService(default_ttl=ttl, max_size=settings.CACHE_MAX_ITEMS)
 
 
 def cache_key(prefix: str, *parts: str) -> str:

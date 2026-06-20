@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-DOCKER_COMPOSE ?= docker-compose
+DOCKER_COMPOSE ?= docker compose
 ENV            ?= development
 VALID_ENVS     := development staging production test
 
