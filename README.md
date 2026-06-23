@@ -49,72 +49,90 @@ llm = ChatOpenAI(
 This works as a drop-in replacement anywhere `ChatOpenAI` is used in your LangGraph agent — including the `LLMRegistry`, the circular fallback service, and mem0 long-term memory.
 
 <details>
-<summary>📋 Full model catalog (59 LLMs available)</summary>
+<summary>📋 Full model catalog — official Atlas Cloud LLM list (59 models)</summary>
 
-| Model ID | Provider |
-|---|---|
-| `deepseek-ai/DeepSeek-V3-0324` | DeepSeek |
-| `deepseek-ai/deepseek-r1-0528` | DeepSeek |
-| `deepseek-ai/DeepSeek-V3.1` | DeepSeek |
-| `deepseek-ai/DeepSeek-V3.1-Terminus` | DeepSeek |
-| `deepseek-ai/DeepSeek-V3.2-Exp` | DeepSeek |
-| `deepseek-ai/deepseek-v3.2` | DeepSeek |
-| `qwen/qwen3-32b` | Alibaba Qwen |
-| `qwen/qwen3-8b` | Alibaba Qwen |
-| `qwen/qwen3-235b-a22b-thinking-2507` | Alibaba Qwen |
-| `qwen/qwen3-30b-a3b` | Alibaba Qwen |
-| `qwen/qwen3-30b-a3b-thinking-2507` | Alibaba Qwen |
-| `Qwen/Qwen3-Coder` | Alibaba Qwen |
-| `Qwen/Qwen3-235B-A22B-Instruct-2507` | Alibaba Qwen |
-| `Qwen/Qwen3-Next-80B-A3B-Instruct` | Alibaba Qwen |
-| `Qwen/Qwen3-Next-80B-A3B-Thinking` | Alibaba Qwen |
-| `Qwen/Qwen3-30B-A3B-Instruct-2507` | Alibaba Qwen |
-| `Qwen/Qwen3-VL-235B-A22B-Instruct` | Alibaba Qwen |
-| `moonshotai/Kimi-K2-Instruct` | Moonshot AI |
-| `moonshotai/Kimi-K2-Instruct-0905` | Moonshot AI |
-| `moonshotai/Kimi-K2-Thinking` | Moonshot AI |
-| `moonshotai/kimi-k2.5` | Moonshot AI |
-| `zai-org/GLM-4.6` | Zhipu AI |
-| `zai-org/glm-4.7` | Zhipu AI |
-| `MiniMaxAI/MiniMax-M2` | MiniMax |
-| `minimaxai/minimax-m2.1` | MiniMax |
-| `google/gemini-2.5-flash` | Google |
-| `google/gemini-2.5-flash-preview-202509` | Google |
-| `google/gemini-2.5-flash-lite` | Google |
-| `google/gemini-2.5-flash-lite-preview-202509` | Google |
-| `google/gemini-2.5-pro` | Google |
-| `google/gemini-3-flash-preview` | Google |
-| `google/gemini-2.0-flash` | Google |
-| `google/gemini-2.0-flash-lite` | Google |
-| `openai/gpt-5.1` | OpenAI |
-| `openai/gpt-5.1-chat` | OpenAI |
-| `openai/gpt-5.1-codex` | OpenAI |
-| `openai/gpt-5.1-codex-mini` | OpenAI |
-| `openai/gpt-5.1-codex-max` | OpenAI |
-| `openai/gpt-4o` | OpenAI |
-| `openai/gpt-4o-mini` | OpenAI |
-| `openai/gpt-4.1` | OpenAI |
-| `openai/gpt-4.1-mini` | OpenAI |
-| `openai/gpt-4.1-nano` | OpenAI |
-| `openai/o1` | OpenAI |
-| `openai/o3` | OpenAI |
-| `openai/o3-mini` | OpenAI |
-| `openai/o4-mini` | OpenAI |
-| `openai/o3-pro` | OpenAI |
-| `openai/gpt-5` | OpenAI |
-| `openai/gpt-5-chat` | OpenAI |
-| `openai/gpt-5-codex` | OpenAI |
-| `openai/gpt-5-mini` | OpenAI |
-| `openai/gpt-5-nano` | OpenAI |
-| `openai/gpt-5-pro` | OpenAI |
-| `openai/gpt-5.2` | OpenAI |
-| `openai/gpt-5.2-chat` | OpenAI |
-| `anthropic/claude-sonnet-4-20250514` | Anthropic |
-| `anthropic/claude-haiku-4.5-20251001` | Anthropic |
-| `anthropic/claude-sonnet-4.5-20250929` | Anthropic |
-| `anthropic/claude-opus-4.1-20250805` | Anthropic |
-| `anthropic/claude-opus-4-20250514` | Anthropic |
-| `anthropic/claude-opus-4.5-20251101` | Anthropic |
+The full official list, grouped by vendor (synced with [atlascloud.ai/models](https://www.atlascloud.ai/models)). Pass any of these as `DEFAULT_LLM_MODEL` / the `model` argument:
+
+**Anthropic (Claude)**
+- `anthropic/claude-haiku-4.5-20251001`
+- `anthropic/claude-opus-4.8`
+- `anthropic/claude-sonnet-4.6`
+
+**OpenAI (GPT)**
+- `openai/gpt-5.4`
+- `openai/gpt-5.5`
+
+**Google (Gemini)**
+- `google/gemini-3.1-flash-lite`
+- `google/gemini-3.1-pro-preview`
+- `google/gemini-3.5-flash`
+
+**Alibaba Qwen**
+- `qwen/qwen2.5-7b-instruct`
+- `Qwen/Qwen3-235B-A22B-Instruct-2507`
+- `qwen/qwen3-235b-a22b-thinking-2507`
+- `qwen/qwen3-30b-a3b`
+- `Qwen/Qwen3-30B-A3B-Instruct-2507`
+- `qwen/qwen3-30b-a3b-thinking-2507`
+- `qwen/qwen3-32b`
+- `qwen/qwen3-8b`
+- `Qwen/Qwen3-Coder`
+- `qwen/qwen3-coder-next`
+- `qwen/qwen3-max-2026-01-23`
+- `Qwen/Qwen3-Next-80B-A3B-Instruct`
+- `Qwen/Qwen3-Next-80B-A3B-Thinking`
+- `Qwen/Qwen3-VL-235B-A22B-Instruct`
+- `qwen/qwen3-vl-235b-a22b-thinking`
+- `qwen/qwen3-vl-30b-a3b-instruct`
+- `qwen/qwen3-vl-30b-a3b-thinking`
+- `qwen/qwen3-vl-8b-instruct`
+- `qwen/qwen3.5-122b-a10b`
+- `qwen/qwen3.5-27b`
+- `qwen/qwen3.5-35b-a3b`
+- `qwen/qwen3.5-397b-a17b`
+- `qwen/qwen3.6-35b-a3b`
+- `qwen/qwen3.6-plus`
+
+**DeepSeek**
+- `deepseek-ai/deepseek-ocr`
+- `deepseek-ai/deepseek-r1-0528`
+- `deepseek-ai/DeepSeek-V3-0324`
+- `deepseek-ai/DeepSeek-V3.1`
+- `deepseek-ai/DeepSeek-V3.1-Terminus`
+- `deepseek-ai/deepseek-v3.2`
+- `deepseek-ai/DeepSeek-V3.2-Exp`
+- `deepseek-ai/deepseek-v4-flash`
+- `deepseek-ai/deepseek-v4-pro`
+
+**Moonshot (Kimi)**
+- `moonshotai/Kimi-K2-Instruct`
+- `moonshotai/Kimi-K2-Instruct-0905`
+- `moonshotai/Kimi-K2-Thinking`
+- `moonshotai/kimi-k2.5`
+- `moonshotai/kimi-k2.6`
+
+**Zhipu GLM**
+- `zai-org/GLM-4.6`
+- `zai-org/glm-4.7`
+- `zai-org/glm-5`
+- `zai-org/glm-5-turbo`
+- `zai-org/glm-5.1`
+- `zai-org/glm-5v-turbo`
+
+**MiniMax**
+- `MiniMaxAI/MiniMax-M2`
+- `minimaxai/minimax-m2.1`
+- `minimaxai/minimax-m2.5`
+- `minimaxai/minimax-m2.7`
+
+**xAI (Grok)**
+- `xai/grok-4.3`
+
+**Kwaipilot (KAT)**
+- `kwaipilot/kat-coder-pro-v2`
+
+**Other**
+- `owl`
 
 [View live model list →](https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template)
 
