@@ -67,29 +67,39 @@ if [ -f "$ENV_FILE" ]; then
 
     echo -e "${GREEN}Successfully loaded environment variables from $ENV_FILE${NC}"
 else
-    echo -e "${YELLOW}Warning: $ENV_FILE not found. Creating from .env.example...${NC}"
+    if [[ "$ENV" == "development" ]]; then
+        echo -e "${YELLOW}Warning: $ENV_FILE not found. Creating from .env.example...${NC}"
 
-    EXAMPLE_FILE="$PROJECT_ROOT/.env.example"
-    if [ -f "$EXAMPLE_FILE" ]; then
-        cp "$EXAMPLE_FILE" "$ENV_FILE"
-        echo -e "${GREEN}Created $ENV_FILE from template.${NC}"
-        echo -e "${PURPLE}Please update it with your configuration.${NC}"
+        EXAMPLE_FILE="$PROJECT_ROOT/.env.example"
+        if [ -f "$EXAMPLE_FILE" ]; then
+            cp "$EXAMPLE_FILE" "$ENV_FILE"
+            echo -e "${GREEN}Created $ENV_FILE from template.${NC}"
+            echo -e "${PURPLE}Please update it with your configuration before starting the app.${NC}"
 
-        # Export all environment variables from the new file
-        set -a
-        source "$ENV_FILE"
-        set +a
+            # Export all environment variables from the new file
+            set -a
+            source "$ENV_FILE"
+            set +a
 
-        validate_jwt_secret_key "${JWT_SECRET_KEY:-}" || return 1
-
-        echo -e "${GREEN}Successfully loaded environment variables from new $ENV_FILE${NC}"
+            echo -e "${GREEN}Successfully loaded environment variables from new $ENV_FILE${NC}"
+        else
+            echo -e "${RED}Error: .env.example not found at $EXAMPLE_FILE${NC}"
+            return 1
+        fi
     else
-        echo -e "${RED}Error: .env.example not found at $EXAMPLE_FILE${NC}"
+        echo -e "${RED}Error: $ENV_FILE not found. Refusing to start $ENV with template defaults.${NC}"
+        echo -e "${PURPLE}Create $ENV_FILE from .env.example, then set real secrets before retrying.${NC}"
         return 1
     fi
 fi
 
 validate_jwt_secret_key "${JWT_SECRET_KEY:-}" || return 1
+
+if [[ "$ENV" != "development" && "${APP_ENV:-}" != "$ENV" ]]; then
+    echo -e "${RED}Error: APP_ENV resolved to '${APP_ENV:-unset}' while '$ENV' was requested.${NC}"
+    echo -e "${PURPLE}Fix the environment file so APP_ENV matches the requested environment.${NC}"
+    return 1
+fi
 
 # Print current environment
 echo -e "\n${GREEN}======= ENVIRONMENT SUMMARY =======${NC}"
