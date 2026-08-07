@@ -12,6 +12,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
+WEAK_JWT_SECRET_KEYS = {
+    "",
+    "changeme",
+    "change_me",
+    "change_me_to_a_random_32_plus_char_string",
+    "supersecretkeythatshouldbechangedforproduction",
+    "your-jwt-secret-key",
+}
+
+
 # Define environment types
 class Environment(str, Enum):
     """Application environment types.
@@ -162,6 +172,7 @@ class Settings:
         self.JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
         self.JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
         self.JWT_ACCESS_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_DAYS", "30"))
+        self.validate_jwt_secret_key()
 
         # Logging Configuration
         self.LOG_DIR = Path(os.getenv("LOG_DIR", "logs"))
@@ -257,6 +268,18 @@ class Settings:
             # Only override if environment variable wasn't explicitly set
             if env_var_name not in os.environ:
                 setattr(self, key, value)
+
+    def validate_jwt_secret_key(self):
+        """Reject empty, short, or placeholder JWT secrets outside test runs."""
+        if self.ENVIRONMENT == Environment.TEST:
+            return
+
+        secret = self.JWT_SECRET_KEY.strip()
+        if len(secret) < 32:
+            raise RuntimeError("JWT_SECRET_KEY must be at least 32 characters long")
+
+        if secret.lower() in WEAK_JWT_SECRET_KEYS:
+            raise RuntimeError("JWT_SECRET_KEY must be a strong random value, not a placeholder or default")
 
 
 # Create settings instance
