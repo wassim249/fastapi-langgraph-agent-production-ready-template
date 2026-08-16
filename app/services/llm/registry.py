@@ -4,6 +4,7 @@ from typing import (
     Any,
     Dict,
     List,
+    cast,
 )
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -92,8 +93,19 @@ class LLMRegistry:
             raise ValueError(f"model '{model_name}' not found in registry. available models: {available}")
 
         if kwargs:
-            logger.debug("creating_llm_with_custom_args", model_name=model_name, custom_args=list(kwargs.keys()))
-            return ChatOpenAI(model=model_name, api_key=_API_KEY, **kwargs)
+            # Use the entry's real model id, not its registry name: they differ for
+            # aliases (e.g. "gpt-5.4" is served by "gpt-5"), and passing the name
+            # would send an unknown model to the API.
+            base_llm = cast(ChatOpenAI, model_entry["llm"])
+            logger.debug(
+                "creating_llm_with_custom_args",
+                model_name=model_name,
+                model=base_llm.model_name,
+                custom_args=list(kwargs.keys()),
+            )
+            # ponytail: carries the token limit but not per-entry `reasoning`;
+            # add that here if a caller ever needs to override a reasoning model.
+            return ChatOpenAI(model=base_llm.model_name, api_key=_API_KEY, model_kwargs=_TOKEN_LIMIT, **kwargs)
 
         logger.debug("using_default_llm_instance", model_name=model_name)
         return model_entry["llm"]
