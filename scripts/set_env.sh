@@ -29,6 +29,26 @@ fi
 # Set environment variables
 export APP_ENV=$ENV
 
+validate_jwt_secret_key() {
+    local secret="$1"
+    local secret_lc
+    secret_lc="$(printf '%s' "$secret" | tr '[:upper:]' '[:lower:]')"
+
+    if [ ${#secret} -lt 32 ]; then
+        echo -e "${RED}Error: JWT_SECRET_KEY must be at least 32 characters long.${NC}"
+        return 1
+    fi
+
+    case "$secret_lc" in
+        "changeme"|"change_me"|"change_me_to_a_random_32_plus_char_string"|"supersecretkeythatshouldbechangedforproduction"|"your-jwt-secret-key")
+            echo -e "${RED}Error: JWT_SECRET_KEY is still using a placeholder/default value.${NC}"
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
 # Get script directory and project root
 # Using a simpler approach that works for most shells when sourced
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
@@ -60,12 +80,16 @@ else
         source "$ENV_FILE"
         set +a
 
+        validate_jwt_secret_key "${JWT_SECRET_KEY:-}" || return 1
+
         echo -e "${GREEN}Successfully loaded environment variables from new $ENV_FILE${NC}"
     else
         echo -e "${RED}Error: .env.example not found at $EXAMPLE_FILE${NC}"
         return 1
     fi
 fi
+
+validate_jwt_secret_key "${JWT_SECRET_KEY:-}" || return 1
 
 # Print current environment
 echo -e "\n${GREEN}======= ENVIRONMENT SUMMARY =======${NC}"
