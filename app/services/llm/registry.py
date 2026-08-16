@@ -4,20 +4,21 @@ from typing import (
     Any,
     Dict,
     List,
+    cast,
 )
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
-from app.core.config import (
-    Environment,
-    settings,
-)
+from app.core.config import settings
 from app.core.logging import logger
 
-_TOKEN_LIMIT: Dict[str, Any] = {"max_completion_tokens": settings.MAX_TOKENS}
 _API_KEY = SecretStr(settings.OPENAI_API_KEY)
+
+# Every model here is a reasoning model, and the API rejects the classic sampling
+# knobs (`top_p`, `presence_penalty`, `frequency_penalty`) with a 400 once
+# `reasoning` is set. Tune quality with `reasoning.effort` instead.
 
 
 class LLMRegistry:
@@ -27,23 +28,34 @@ class LLMRegistry:
     methods to retrieve them by name with optional argument overrides.
     """
 
+    # Ordered by preference: index 0 is the default and the head of the circular
+    # fallback chain, so it degrades newest -> cheapest.
     LLMS: List[Dict[str, Any]] = [
         {
-            "name": "gpt-5-mini",
+            "name": "gpt-5.6-luna",
             "llm": ChatOpenAI(
-                model="gpt-5-mini",
+                model="gpt-5.6-luna",
                 api_key=_API_KEY,
-                model_kwargs=_TOKEN_LIMIT,
-                reasoning={"effort": "low"},
+                max_completion_tokens=settings.MAX_TOKENS,
+                reasoning={"effort": "medium"},
             ),
         },
         {
             "name": "gpt-5.4",
             "llm": ChatOpenAI(
-                model="gpt-5",
+                model="gpt-5.4",
                 api_key=_API_KEY,
-                model_kwargs=_TOKEN_LIMIT,
+                max_completion_tokens=settings.MAX_TOKENS,
                 reasoning={"effort": "medium"},
+            ),
+        },
+        {
+            "name": "gpt-5.4-mini",
+            "llm": ChatOpenAI(
+                model="gpt-5.4-mini",
+                api_key=_API_KEY,
+                max_completion_tokens=settings.MAX_TOKENS,
+                reasoning={"effort": "low"},
             ),
         },
         {
@@ -51,19 +63,8 @@ class LLMRegistry:
             "llm": ChatOpenAI(
                 model="gpt-5.4-nano",
                 api_key=_API_KEY,
-                model_kwargs=_TOKEN_LIMIT,
+                max_completion_tokens=settings.MAX_TOKENS,
                 reasoning={"effort": "low"},
-            ),
-        },
-        {
-            "name": "gpt-5",
-            "llm": ChatOpenAI(
-                model="gpt-5",
-                api_key=_API_KEY,
-                model_kwargs=_TOKEN_LIMIT,
-                top_p=0.95 if settings.ENVIRONMENT == Environment.PRODUCTION else 0.8,
-                presence_penalty=0.1 if settings.ENVIRONMENT == Environment.PRODUCTION else 0.0,
-                frequency_penalty=0.1 if settings.ENVIRONMENT == Environment.PRODUCTION else 0.0,
             ),
         },
     ]
@@ -92,8 +93,24 @@ class LLMRegistry:
             raise ValueError(f"model '{model_name}' not found in registry. available models: {available}")
 
         if kwargs:
-            logger.debug("creating_llm_with_custom_args", model_name=model_name, custom_args=list(kwargs.keys()))
-            return ChatOpenAI(model=model_name, api_key=_API_KEY, **kwargs)
+            # Take the model id from the entry rather than reusing the registry
+            # name, so a name that ever diverges from its model can't send an
+            # unknown id to the API.
+            base_llm = cast(ChatOpenAI, model_entry["llm"])
+            logger.debug(
+                "creating_llm_with_custom_args",
+                model_name=model_name,
+                model=base_llm.model_name,
+                custom_args=list(kwargs.keys()),
+            )
+            # ponytail: carries the token limit but not per-entry `reasoning`;
+            # add that here if a caller ever needs to override a reasoning model.
+            return ChatOpenAI(
+                model=base_llm.model_name,
+                api_key=_API_KEY,
+                max_completion_tokens=settings.MAX_TOKENS,
+                **kwargs,
+            )
 
         logger.debug("using_default_llm_instance", model_name=model_name)
         return model_entry["llm"]

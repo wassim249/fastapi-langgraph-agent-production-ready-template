@@ -1,4 +1,4 @@
-"""${message | trim}."""
+"""${message | trim}.
 
 Revision ID: ${up_revision}
 Revises: ${down_revision | comma,n}

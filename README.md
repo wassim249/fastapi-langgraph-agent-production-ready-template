@@ -19,7 +19,7 @@ A production-ready template for building AI agent backends with FastAPI and Lang
 
 [**Atlas Cloud**](https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template) provides an **OpenAI-compatible LLM API** that integrates seamlessly into this FastAPI + LangGraph template — no code changes to your agent graph needed. Just swap `OPENAI_BASE_URL` and `OPENAI_API_KEY` to access **DeepSeek, Qwen, GLM, Kimi, MiniMax, Gemini, Claude, GPT** and more through a single unified endpoint.
 
-The `LLMRegistry` in this template uses `langchain_openai.ChatOpenAI` — Atlas Cloud is wire-compatible, so you get instant access to 59+ curated reasoning models without touching any LangGraph logic.
+The `LLMRegistry` in this template uses `langchain_openai.ChatOpenAI` — Atlas Cloud is wire-compatible, so you get instant access to 130+ curated models without touching any LangGraph logic.
 
 ### Quick Setup
 
@@ -49,72 +49,45 @@ llm = ChatOpenAI(
 This works as a drop-in replacement anywhere `ChatOpenAI` is used in your LangGraph agent — including the `LLMRegistry`, the circular fallback service, and mem0 long-term memory.
 
 <details>
-<summary>📋 Full model catalog (59 LLMs available)</summary>
+<summary>📋 Model catalog — a current selection (136 available in total)</summary>
 
 | Model ID | Provider |
 |---|---|
-| `deepseek-ai/DeepSeek-V3-0324` | DeepSeek |
-| `deepseek-ai/deepseek-r1-0528` | DeepSeek |
-| `deepseek-ai/DeepSeek-V3.1` | DeepSeek |
-| `deepseek-ai/DeepSeek-V3.1-Terminus` | DeepSeek |
-| `deepseek-ai/DeepSeek-V3.2-Exp` | DeepSeek |
-| `deepseek-ai/deepseek-v3.2` | DeepSeek |
-| `qwen/qwen3-32b` | Alibaba Qwen |
-| `qwen/qwen3-8b` | Alibaba Qwen |
-| `qwen/qwen3-235b-a22b-thinking-2507` | Alibaba Qwen |
-| `qwen/qwen3-30b-a3b` | Alibaba Qwen |
-| `qwen/qwen3-30b-a3b-thinking-2507` | Alibaba Qwen |
-| `Qwen/Qwen3-Coder` | Alibaba Qwen |
-| `Qwen/Qwen3-235B-A22B-Instruct-2507` | Alibaba Qwen |
-| `Qwen/Qwen3-Next-80B-A3B-Instruct` | Alibaba Qwen |
-| `Qwen/Qwen3-Next-80B-A3B-Thinking` | Alibaba Qwen |
-| `Qwen/Qwen3-30B-A3B-Instruct-2507` | Alibaba Qwen |
-| `Qwen/Qwen3-VL-235B-A22B-Instruct` | Alibaba Qwen |
-| `moonshotai/Kimi-K2-Instruct` | Moonshot AI |
-| `moonshotai/Kimi-K2-Instruct-0905` | Moonshot AI |
-| `moonshotai/Kimi-K2-Thinking` | Moonshot AI |
-| `moonshotai/kimi-k2.5` | Moonshot AI |
-| `zai-org/GLM-4.6` | Zhipu AI |
-| `zai-org/glm-4.7` | Zhipu AI |
-| `MiniMaxAI/MiniMax-M2` | MiniMax |
-| `minimaxai/minimax-m2.1` | MiniMax |
-| `google/gemini-2.5-flash` | Google |
-| `google/gemini-2.5-flash-preview-202509` | Google |
-| `google/gemini-2.5-flash-lite` | Google |
-| `google/gemini-2.5-flash-lite-preview-202509` | Google |
-| `google/gemini-2.5-pro` | Google |
-| `google/gemini-3-flash-preview` | Google |
-| `google/gemini-2.0-flash` | Google |
-| `google/gemini-2.0-flash-lite` | Google |
-| `openai/gpt-5.1` | OpenAI |
-| `openai/gpt-5.1-chat` | OpenAI |
-| `openai/gpt-5.1-codex` | OpenAI |
-| `openai/gpt-5.1-codex-mini` | OpenAI |
-| `openai/gpt-5.1-codex-max` | OpenAI |
-| `openai/gpt-4o` | OpenAI |
-| `openai/gpt-4o-mini` | OpenAI |
-| `openai/gpt-4.1` | OpenAI |
-| `openai/gpt-4.1-mini` | OpenAI |
-| `openai/gpt-4.1-nano` | OpenAI |
-| `openai/o1` | OpenAI |
-| `openai/o3` | OpenAI |
-| `openai/o3-mini` | OpenAI |
-| `openai/o4-mini` | OpenAI |
-| `openai/o3-pro` | OpenAI |
-| `openai/gpt-5` | OpenAI |
-| `openai/gpt-5-chat` | OpenAI |
-| `openai/gpt-5-codex` | OpenAI |
-| `openai/gpt-5-mini` | OpenAI |
-| `openai/gpt-5-nano` | OpenAI |
-| `openai/gpt-5-pro` | OpenAI |
+| `openai/gpt-5.6-luna` | OpenAI |
+| `openai/gpt-5.6-sol` | OpenAI |
+| `openai/gpt-5.6-terra` | OpenAI |
+| `openai/gpt-5.5` | OpenAI |
+| `openai/gpt-5.4` | OpenAI |
+| `openai/gpt-5.4-mini` | OpenAI |
+| `openai/gpt-5.4-nano` | OpenAI |
+| `openai/gpt-5.3-codex` | OpenAI |
 | `openai/gpt-5.2` | OpenAI |
-| `openai/gpt-5.2-chat` | OpenAI |
-| `anthropic/claude-sonnet-4-20250514` | Anthropic |
+| `anthropic/claude-opus-5` | Anthropic |
+| `anthropic/claude-sonnet-5` | Anthropic |
+| `anthropic/claude-opus-4.8` | Anthropic |
+| `anthropic/claude-sonnet-4.6` | Anthropic |
 | `anthropic/claude-haiku-4.5-20251001` | Anthropic |
-| `anthropic/claude-sonnet-4.5-20250929` | Anthropic |
-| `anthropic/claude-opus-4.1-20250805` | Anthropic |
-| `anthropic/claude-opus-4-20250514` | Anthropic |
-| `anthropic/claude-opus-4.5-20251101` | Anthropic |
+| `google/gemini-3.5-flash` | Google |
+| `google/gemini-3.1-pro-preview` | Google |
+| `google/gemini-3.1-flash-lite` | Google |
+| `google/gemini-2.5-pro` | Google |
+| `deepseek-ai/deepseek-v4-pro` | DeepSeek |
+| `deepseek-ai/deepseek-v4-flash` | DeepSeek |
+| `qwen/qwen3.8-max` | Alibaba Qwen |
+| `qwen/qwen3.7-plus` | Alibaba Qwen |
+| `qwen/qwen3.5-plus` | Alibaba Qwen |
+| `moonshotai/kimi-k3` | Moonshot AI |
+| `moonshotai/kimi-k2.7-code` | Moonshot AI |
+| `zai-org/glm-5.2` | Zhipu AI |
+| `zai-org/glm-5.1` | Zhipu AI |
+| `zai-org/glm-5` | Zhipu AI |
+| `minimaxai/minimax-m3` | MiniMax |
+| `minimaxai/minimax-m2.7` | MiniMax |
+| `xai/grok-4.6` | xAI |
+| `xai/grok-4.5` | xAI |
+| `bytedance/doubao-seed-2.1-pro-260628` | ByteDance |
+| `xiaomi/mimo-v2.5-pro` | Xiaomi |
+| `tencent/hy3` | Tencent |
 
 [View live model list →](https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template)
 

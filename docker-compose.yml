@@ -53,6 +53,9 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-development}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set to a strong random value}
+      # The .env files say localhost, which is correct for `make dev` but unreachable
+      # from inside the container. Point at the compose service instead.
+      - POSTGRES_HOST=db
     depends_on:
       db:
         condition: service_healthy
