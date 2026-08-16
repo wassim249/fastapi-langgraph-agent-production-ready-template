@@ -41,10 +41,7 @@ from psycopg.rows import (
 )
 from psycopg_pool import AsyncConnectionPool
 
-from app.core.config import (
-    Environment,
-    settings,
-)
+from app.core.config import settings
 from app.core.langgraph.tools import tools
 from app.core.logging import logger
 from app.core.metrics import llm_inference_duration_seconds
@@ -87,12 +84,14 @@ class LangGraphAgent:
             environment=settings.ENVIRONMENT.value,
         )
 
-    async def _get_connection_pool(self) -> Optional[PostgresConnPool]:
+    async def _get_connection_pool(self) -> PostgresConnPool:
         """Get a PostgreSQL connection pool using environment-specific settings.
 
         Returns:
-            AsyncConnectionPool or None when the pool fails to initialise in
-            production (the app keeps running in a degraded mode).
+            AsyncConnectionPool: The open connection pool.
+
+        Raises:
+            Exception: If the pool cannot be created, in every environment.
         """
         if self._connection_pool is None:
             try:
@@ -119,11 +118,12 @@ class LangGraphAgent:
                 await self._connection_pool.open()
                 logger.info("connection_pool_created", max_size=max_size, environment=settings.ENVIRONMENT.value)
             except Exception as e:
-                logger.error("connection_pool_creation_failed", error=str(e), environment=settings.ENVIRONMENT.value)
-                # In production, we might want to degrade gracefully
-                if settings.ENVIRONMENT == Environment.PRODUCTION:
-                    logger.warning("continuing_without_connection_pool", environment=settings.ENVIRONMENT.value)
-                    return None
+                logger.exception(
+                    "connection_pool_creation_failed", error=str(e), environment=settings.ENVIRONMENT.value
+                )
+                # Never degrade silently: the checkpointer is the only store for
+                # conversation history and HITL resume state. Serving without it
+                # loses data rather than surfacing an outage.
                 raise e
         return self._connection_pool
 
@@ -211,11 +211,14 @@ class LangGraphAgent:
 
         return Command(update={"messages": outputs}, goto="chat")
 
-    async def create_graph(self) -> Optional[CompiledStateGraph]:
+    async def create_graph(self) -> CompiledStateGraph:
         """Create and configure the LangGraph workflow.
 
         Returns:
-            Optional[CompiledStateGraph]: The configured LangGraph instance or None if init fails
+            CompiledStateGraph: The configured LangGraph instance, always with a checkpointer.
+
+        Raises:
+            Exception: If the graph cannot be built, in every environment.
         """
         if self._graph is None:
             try:
@@ -230,16 +233,10 @@ class LangGraphAgent:
                 graph_builder.set_entry_point("chat")
                 graph_builder.set_finish_point("chat")
 
-                # Get connection pool (may be None in production if DB unavailable)
+                # Raises if the pool cannot be created — no checkpointer, no service.
                 connection_pool = await self._get_connection_pool()
-                if connection_pool:
-                    checkpointer = AsyncPostgresSaver(connection_pool)
-                    await checkpointer.setup()
-                else:
-                    # In production, proceed without checkpointer if needed
-                    checkpointer = None
-                    if settings.ENVIRONMENT != Environment.PRODUCTION:
-                        raise Exception("Connection pool initialization failed")
+                checkpointer = AsyncPostgresSaver(connection_pool)
+                await checkpointer.setup()
 
                 self._graph = graph_builder.compile(
                     checkpointer=checkpointer, name=f"{settings.PROJECT_NAME} Agent ({settings.ENVIRONMENT.value})"
@@ -252,11 +249,7 @@ class LangGraphAgent:
                     has_checkpointer=checkpointer is not None,
                 )
             except Exception as e:
-                logger.error("graph_creation_failed", error=str(e), environment=settings.ENVIRONMENT.value)
-                # In production, we don't want to crash the app
-                if settings.ENVIRONMENT == Environment.PRODUCTION:
-                    logger.warning("continuing_without_graph")
-                    return None
+                logger.exception("graph_creation_failed", error=str(e), environment=settings.ENVIRONMENT.value)
                 raise e
 
         return self._graph
@@ -265,14 +258,11 @@ class LangGraphAgent:
         """Return the compiled graph, creating it on first access.
 
         Raises:
-            RuntimeError: When ``create_graph()`` swallowed an init failure
-                (production-only path) and returned ``None``. Callers can
-                rely on the return being non-``None``.
+            Exception: Propagated from ``create_graph()`` when initialisation
+                fails. Callers can rely on the return being non-``None``.
         """
         if self._graph is None:
             self._graph = await self.create_graph()
-        if self._graph is None:
-            raise RuntimeError("graph initialization failed")
         return self._graph
 
     async def get_response(
