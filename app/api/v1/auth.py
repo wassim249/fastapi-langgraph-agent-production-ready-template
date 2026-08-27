@@ -219,7 +219,7 @@ async def login(
     """
     try:
         # Sanitize inputs
-        email = sanitize_string(email)
+        email = sanitize_string(email).lower()
         grant_type = sanitize_string(grant_type)
 
         # Verify grant type
