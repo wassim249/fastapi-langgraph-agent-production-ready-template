@@ -4,6 +4,7 @@ from typing import (
     List,
     Optional,
 )
+from urllib.parse import quote_plus
 
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
@@ -40,7 +41,8 @@ class DatabaseService:
 
             # Create engine with appropriate pool configuration
             connection_url = (
-                f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+                "postgresql://"
+                f"{quote_plus(settings.POSTGRES_USER)}:{quote_plus(settings.POSTGRES_PASSWORD)}"
                 f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
             )
 
