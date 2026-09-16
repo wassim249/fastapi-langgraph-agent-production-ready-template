@@ -18,7 +18,6 @@ from langchain_core.messages import BaseMessage
 from openai import (
     APIError,
     APITimeoutError,
-    OpenAIError,
     RateLimitError,
 )
 from pydantic import BaseModel
@@ -186,7 +185,9 @@ class LLMService:
             The runnable's response (``BaseMessage`` or a ``BaseModel`` instance).
 
         Raises:
-            OpenAIError: Propagated after all retry attempts are exhausted.
+            Exception: Propagated after all retry attempts are exhausted —
+                OpenAI's error types on the backoff-retry path, or whatever
+                the invoked provider's runnable raised otherwise.
         """
         try:
             response = await llm.ainvoke(messages)
@@ -200,7 +201,11 @@ class LLMService:
                 exc_info=True,
             )
             raise
-        except OpenAIError as e:
+        except Exception as e:
+            # The backoff retry above only matches OpenAI's error types, but a
+            # non-OpenAI registry entry can fail with its own provider's
+            # exception type — catch broadly so `_fallback_loop` still
+            # advances to the next model regardless of which one raised.
             logger.error(
                 "llm_call_failed",
                 error_type=type(e).__name__,
@@ -317,7 +322,12 @@ class LLMService:
             current_name = LLMRegistry.LLMS[current]["name"]
             try:
                 return await self._invoke_with_retry(get_target(current), messages)
-            except OpenAIError as e:
+            except Exception as e:
+                # Broad on purpose: a registry entry can be any provider, and
+                # each has its own exception hierarchy, so this can't be
+                # narrowed to e.g. OpenAIError without breaking fallback for
+                # non-OpenAI models. ValueError from an invalid model_name is
+                # raised earlier in `_call_with_fallback`, before this loop.
                 last_error = e
                 logger.error(
                     "llm_call_failed_after_retries",

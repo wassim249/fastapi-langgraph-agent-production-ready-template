@@ -11,18 +11,26 @@ The package is split into two modules:
 
 ## Model registry
 
-Models are defined in `LLMRegistry.LLMS` in order of preference:
+Models are defined in `LLMRegistry.LLM_CONFIGS` in order of preference:
 
-| Name           | Model        | Notes                                  |
-| -------------- | ------------ | -------------------------------------- |
-| `gpt-5-mini`   | gpt-5-mini   | Default. Low reasoning effort.         |
-| `gpt-5.4`      | gpt-5        | Medium reasoning effort.               |
-| `gpt-5.4-nano` | gpt-5.4-nano | Fast, low reasoning effort.            |
-| `gpt-5`        | gpt-5        | Full model, production-tuned sampling. |
+| Name           | Model        | Notes                              |
+| -------------- | ------------ | ----------------------------------- |
+| `gpt-5.6-luna` | gpt-5.6-luna | Default. Medium reasoning effort.  |
+| `gpt-5.4`      | gpt-5.4      | Medium reasoning effort.           |
+| `gpt-5.4-mini` | gpt-5.4-mini | Low reasoning effort.              |
+| `gpt-5.4-nano` | gpt-5.4-nano | Fast, low reasoning effort.        |
 
 Set `DEFAULT_LLM_MODEL` in your `.env` to choose the starting model.
 
-To add or change models, edit `LLMRegistry.LLMS` in `app/services/llm/registry.py`.
+Every entry is built through LangChain's `init_chat_model`. A bare `model` name (like the ones above) is inferred as OpenAI, so existing entries and env vars keep working unchanged. To add a model from another provider, prefix `model` with `provider:`, e.g.:
+
+```python
+{"name": "claude-opus", "model": "anthropic:claude-opus-4-6", "kwargs": {"temperature": 0.2}},
+```
+
+That provider's LangChain integration package must be installed (`uv sync --extra anthropic`, `--extra ollama`, or `--extra google-genai`) and its API key set via the provider's own env var (e.g. `ANTHROPIC_API_KEY`) — the registry does not manage non-OpenAI credentials itself.
+
+To add or change models, edit `LLMRegistry.LLM_CONFIGS` in `app/services/llm/registry.py`.
 
 ## Retry and fallback behaviour
 
@@ -54,7 +62,9 @@ flowchart TD
 
 - Max attempts: `MAX_LLM_CALL_RETRIES` (default: 3)
 - Wait: exponential backoff, 2s min, 10s max
-- Retries on: `RateLimitError`, `APITimeoutError`, `APIError`
+- Retries on: `openai`'s `RateLimitError`, `APITimeoutError`, `APIError`
+
+  These are OpenAI-specific exception types. A non-OpenAI registry entry (e.g. `anthropic:claude-opus-4-6`) still gets circular fallback to the next model on any exception, but not the per-model exponential-backoff retry until that provider's error types are added to this tuple too.
 
 **Total timeout**: `LLM_TOTAL_TIMEOUT` seconds (default: 60s) caps the entire loop. Without this, worst case is `retries × models × max_wait` — potentially 2+ minutes.
 
@@ -90,14 +100,14 @@ The service chains `.with_structured_output(schema)` on the resolved model and r
 ## Adding a new model
 
 ```python
-# app/services/llm/registry.py — LLMRegistry.LLMS
+# app/services/llm/registry.py — LLMRegistry.LLM_CONFIGS
 {
     "name": "gpt-5.4",
-    "llm": ChatOpenAI(
-        model="gpt-5.4",
-        api_key=settings.OPENAI_API_KEY,
-        max_tokens=settings.MAX_TOKENS,
-    ),
+    "model": "gpt-5.4",  # or "provider:model", e.g. "anthropic:claude-opus-4-6"
+    "kwargs": {
+        "max_completion_tokens": settings.MAX_TOKENS,
+        "reasoning": {"effort": "medium"},  # OpenAI-only; drop for other providers
+    },
 },
 ```
 
