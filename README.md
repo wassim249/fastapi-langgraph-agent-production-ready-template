@@ -188,6 +188,22 @@ Long-term memory is self-hosted: mem0 runs in-process and persists into your exi
 **How do I add a custom tool?**
 Drop a LangChain `@tool`-decorated function in `app/core/langgraph/tools/` and register it in the `tools` list exported from that package. The agent picks it up on next start; no graph changes needed.
 
+**Can I run multiple agents (supervisor, sub-agents)?**
+Yes. The template ships a single agent, but any compiled graph can be added as a node of the main graph. It shares `GraphState` (so `messages` flow through) and inherits the parent's Postgres checkpointer, so no extra persistence setup is needed. In `create_graph()` in `app/core/langgraph/graph.py`:
+
+```python
+research = StateGraph(GraphState)
+research.add_node("research", research_node)
+research.set_entry_point("research")
+research_agent = research.compile()  # no checkpointer: inherits the parent's
+
+graph_builder.add_node("chat", self._chat, destinations=("tool_call", "research_agent", END))
+graph_builder.add_node("research_agent", research_agent)
+graph_builder.add_edge("research_agent", "chat")
+```
+
+`chat` then acts as the supervisor: return `Command(goto="research_agent")` to delegate, and the sub-agent's reply comes back to `chat`. Add one node per specialist. For a prebuilt version, see [`langgraph-supervisor`](https://github.com/langchain-ai/langgraph-supervisor-py).
+
 **How does the LLM service handle failures?**
 Two layers: (1) per-call exponential-backoff retry via `tenacity`, (2) **circular fallback** — if the active model exhausts its retries, the service rotates to the next model in `LLMRegistry` and continues. A total timeout budget caps the whole call so latency stays bounded. See [docs/llm-service.md](docs/llm-service.md).
 
