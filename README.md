@@ -178,7 +178,20 @@ The base LangGraph quickstart stops at "agent runs locally". This template adds 
 Recommended but not required. `make docker-up` starts the API + PostgreSQL together. For local-only setup see [docs/getting-started.md](docs/getting-started.md).
 
 **Which LLM providers are supported?**
-Today: **OpenAI only** via the `LLMRegistry` in `app/services/llm/registry.py`. Multi-provider support (Anthropic, Google, OpenRouter) via LangChain's `init_chat_model` is planned — see [#51](https://github.com/wassim249/fastapi-langgraph-agent-production-ready-template/issues/51). Configure your model via `DEFAULT_LLM_MODEL` in `.env.development`.
+Any provider LangChain's [`init_chat_model`](https://python.langchain.com/docs/how_to/chat_models_universal_init/) supports. The `LLMRegistry` in `app/services/llm/registry.py` builds every model through `init_chat_model`, so a bare name like `gpt-5.6-luna` keeps resolving to OpenAI unchanged, while a `provider:model` string (e.g. `anthropic:claude-opus-4-6`, `ollama:llama3`) adds any other provider. Install that provider's LangChain integration package — see the `anthropic` / `ollama` / `google-genai` extras in `pyproject.toml` — and set its API key via the provider's own env var (e.g. `ANTHROPIC_API_KEY`). Configure the default model via `DEFAULT_LLM_MODEL` in `.env.development`.
+
+```bash
+# uv sync with the anthropic extra installed
+uv sync --extra anthropic
+```
+
+```python
+# app/services/llm/registry.py
+LLM_CONFIGS: List[Dict[str, Any]] = [
+    {"name": "gpt-5.6-luna", "model": "gpt-5.6-luna", "kwargs": {...}},  # OpenAI, unchanged
+    {"name": "claude-opus", "model": "anthropic:claude-opus-4-6", "kwargs": {"temperature": 0.2}},
+]
+```
 
 **How do I configure long-term memory?**
 Long-term memory is self-hosted: mem0 runs in-process and persists into your existing PostgreSQL via pgvector — there is no separate mem0 cloud account or API key. You only need a working `OPENAI_API_KEY` (used for fact extraction + embeddings) and the pgvector extension enabled. See [docs/memory.md](docs/memory.md) for details.

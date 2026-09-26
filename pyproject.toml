@@ -55,6 +55,15 @@ cache = [
     "redis>=7.4.0",
     "valkey[libvalkey]>=6.1.0",
 ]
+anthropic = [
+    "langchain-anthropic>=1.7.2",
+]
+ollama = [
+    "langchain-ollama>=1.1.0",
+]
+google-genai = [
+    "langchain-google-genai>=4.3.7",
+]
 
 [dependency-groups]
 dev = [
