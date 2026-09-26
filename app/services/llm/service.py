@@ -201,6 +201,10 @@ class LLMService:
                 exc_info=True,
             )
             raise
+        except (TypeError, AttributeError, KeyError):
+            # Programming errors, not provider failures — let them surface
+            # as-is instead of logging them as a failed LLM call.
+            raise
         except Exception as e:
             # The backoff retry above only matches OpenAI's error types, but a
             # non-OpenAI registry entry can fail with its own provider's
@@ -322,6 +326,11 @@ class LLMService:
             current_name = LLMRegistry.LLMS[current]["name"]
             try:
                 return await self._invoke_with_retry(get_target(current), messages)
+            except (TypeError, AttributeError, KeyError):
+                # Programming errors would fail identically on every model, so
+                # re-raise immediately rather than cycling through the registry
+                # and leaving the service switched to a fallback model.
+                raise
             except Exception as e:
                 # Broad on purpose: a registry entry can be any provider, and
                 # each has its own exception hierarchy, so this can't be
