@@ -39,9 +39,13 @@ def _build_llm(model: str, **kwargs: Any) -> BaseChatModel:
     "ollama:llama3"). Non-OpenAI providers need their LangChain integration
     package installed (see the `anthropic` / `ollama` extras in
     pyproject.toml) and read their API key from the provider's own env var
-    (e.g. `ANTHROPIC_API_KEY`).
+    (e.g. `ANTHROPIC_API_KEY`). An OpenAI-compatible third party (an
+    `openai:` model with a custom `base_url`) must pass its own `api_key`.
     """
     if _is_openai_model(model):
+        # Without its own key, ChatOpenAI would send OPENAI_API_KEY to the custom endpoint.
+        if kwargs.keys() & {"base_url", "openai_api_base"} and not kwargs.keys() & {"api_key", "openai_api_key"}:
+            raise ValueError(f"'{model}' sets a custom base_url but no api_key; pass that endpoint's own api_key")
         kwargs.setdefault("api_key", _API_KEY)
     return init_chat_model(model, **kwargs)
 
