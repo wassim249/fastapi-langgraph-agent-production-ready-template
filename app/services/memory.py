@@ -10,7 +10,7 @@ from app.core.cache import (
 from app.core.config import settings
 from app.core.logging import logger
 from app.core.prompts import load_memory_capture_prompt
-from app.utils import latest_turn_text
+from app.utils import latest_user_text
 
 
 class MemoryService:
@@ -100,8 +100,7 @@ class MemoryService:
         """
         if user_id is None:
             return
-        user_text, _ = latest_turn_text(messages)
-        user_text = (user_text or "").strip()
+        user_text = latest_user_text(messages).strip()
         if not user_text:
             logger.debug("long_term_memory_skipped_empty_turn", user_id=user_id)
             return

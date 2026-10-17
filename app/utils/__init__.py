@@ -3,7 +3,7 @@
 from .graph import (
     dump_messages,
     extract_text_content,
-    latest_turn_text,
+    latest_user_text,
     prepare_messages,
     process_llm_response,
 )
@@ -11,7 +11,7 @@ from .graph import (
 __all__ = [
     "dump_messages",
     "extract_text_content",
-    "latest_turn_text",
+    "latest_user_text",
     "prepare_messages",
     "process_llm_response",
 ]

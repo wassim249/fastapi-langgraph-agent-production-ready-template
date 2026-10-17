@@ -4,7 +4,6 @@ from typing import cast
 
 import tiktoken
 from langchain_core.messages import (
-    AIMessage,
     BaseMessage,
     HumanMessage,
 )
@@ -89,26 +88,15 @@ def extract_text_content(content: str | list) -> str:
     return "".join(parts)
 
 
-def latest_turn_text(messages: list[BaseMessage]) -> tuple[str, str]:
-    """Return ``(last_user_text, last_assistant_text)`` from a LangGraph message list.
+def latest_user_text(messages: list[BaseMessage]) -> str:
+    """Return the text of the most recent user message in a LangGraph message list.
 
-    Walks the list in reverse so tool calls and intermediate tool messages are
-    skipped — only the user's most recent prompt and the assistant's final
-    text reply are returned. Empty strings are returned when either side is
-    absent (e.g. an interrupted turn with no assistant reply yet). Assistant
-    messages with empty text (tool-call-only) are skipped so we keep walking
-    back until a real reply is found.
+    Walks the list in reverse so the assistant reply, tool calls and tool
+    messages after it are skipped. Returns an empty string when there is no
+    user message.
     """
-    last_user = ""
-    last_assistant = ""
-    for message in reversed(messages):
-        if isinstance(message, AIMessage) and not last_assistant:
-            last_assistant = extract_text_content(message.content)
-        elif isinstance(message, HumanMessage) and not last_user:
-            last_user = extract_text_content(message.content)
-        if last_user and last_assistant:
-            break
-    return last_user, last_assistant
+    last_user = next((m for m in reversed(messages) if isinstance(m, HumanMessage)), None)
+    return extract_text_content(last_user.content) if last_user else ""
 
 
 def process_llm_response(response: BaseMessage) -> BaseMessage:
