@@ -12,9 +12,11 @@ jobs:
   build-and-push:
     name: Build and push to Docker Hub
     runs-on: ubuntu-latest
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install utilities
         run: |
@@ -25,22 +27,19 @@ jobs:
         id: sanitize
         run: |
           REPO_NAME=$(echo "${{ github.event.repository.name }}" | sed 's/^\///' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
-          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+          echo "REPO_NAME=${REPO_NAME}" >> "$GITHUB_ENV"
 
       - name: Build Image
         run: |
-          make docker-build-env ENV=production
+          make docker-build ENV=production
 
       - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKER_USERNAME != '' }}
+        if: ${{ github.event_name == 'push' && env.DOCKER_USERNAME != '' }}
         run: |
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push Image
-        if: ${{ secrets.DOCKER_USERNAME != '' }}
+        if: ${{ github.event_name == 'push' && env.DOCKER_USERNAME != '' }}
         run: |
           docker tag fastapi-langgraph-template:production ${{ secrets.DOCKER_USERNAME }}/${{ env.REPO_NAME }}:production
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.REPO_NAME }}:production
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

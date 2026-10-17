@@ -20,7 +20,7 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "python-jose[cryptography]>=3.4.0",
     "python-multipart>=0.0.20",
-    "sqlmodel>=0.0.24",
+    "sqlmodel>=0.0.25",
     "structlog>=25.2.0",
     "supabase>=2.15.0",
     "uvicorn>=0.34.0",
@@ -55,11 +55,22 @@ cache = [
     "redis>=7.4.0",
     "valkey[libvalkey]>=6.1.0",
 ]
+anthropic = [
+    "langchain-anthropic>=1.7.2",
+]
+ollama = [
+    "langchain-ollama>=1.1.0",
+]
+google-genai = [
+    "langchain-google-genai>=4.3.7",
+]
 
 [dependency-groups]
 dev = [
     "detect-secrets>=1.5.0",
     "pre-commit>=4.5.1",
+    "pyright>=1.1.390",
+    "ruff>=0.11.4",
 ]
 test = ["httpx>=0.28.1", "pytest>=8.3.5"]
 
@@ -110,7 +121,7 @@ exclude = ["migrations", "*.ipynb", "venv"]
 # Enable flake8-bugbear (`B`) rules and docstring (`D`) rules
 select = ["E", "F", "B", "ERA", "D"]
 # Never enforce `E501` (line length violations).
-ignore = ["E501", "F401", "D203", "D213", "B904", "B008"]
+ignore = ["E501", "D203", "D213", "B904", "B008"]
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 unfixable = ["B"]
 
@@ -120,3 +131,24 @@ convention = "google"
 # Ignore `E402` (import violations) in all `__init__.py` files
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
+
+[tool.pyright]
+include = ["app", "evals"]
+exclude = [
+    "**/__pycache__",
+    "**/.venv",
+    "alembic/versions",
+    "migrations",
+    "venv",
+]
+stubPath = "typings"
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+
+# Tightened from defaults — cheap real-bug catchers
+reportDuplicateImport = "error"
+reportInvalidTypeVarUse = "error"
+reportSelfClsParameterName = "error"
+
+# Style nudges
+reportImplicitOverride = "warning"

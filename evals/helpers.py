@@ -9,7 +9,6 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Union,
 )
 
 from langfuse.api.resources.commons.types.trace_with_details import TraceWithDetails
@@ -35,11 +34,13 @@ def format_messages(messages: list[dict]) -> str:
             if tool_call:
                 args = tool_call[0].get("function", {}).get("arguments")
             else:
-                args = previous_message.get("tool_calls")[0].get("args") if previous_message.get("tool_calls") else {}
+                prev_tool_calls = previous_message.get("tool_calls")
+                args = prev_tool_calls[0].get("args") if prev_tool_calls else {}
+            content = message.get("content") or ""
             formatted_messages.append(
-                f"tool {message.get('name')} input: {args} {message.get('content')[:100]}..."
-                if len(message.get("content", "")) > 100
-                else f"tool {message.get('name')}: {message.get('content')}"
+                f"tool {message.get('name')} input: {args} {content[:100]}..."
+                if len(content) > 100
+                else f"tool {message.get('name')}: {content}"
             )
         elif message["content"]:
             formatted_messages.append(f"{message['type']}: {message['content']}")

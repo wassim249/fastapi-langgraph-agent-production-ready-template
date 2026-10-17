@@ -16,6 +16,7 @@ from typing import (
     Dict,
     List,
     Optional,
+    override,
 )
 
 import structlog
@@ -30,7 +31,7 @@ from app.core.config import (
 settings.LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Context variables for storing request-specific data
-_request_context: ContextVar[Dict[str, Any]] = ContextVar("request_context", default=None)
+_request_context: ContextVar[Optional[Dict[str, Any]]] = ContextVar("request_context", default=None)
 
 
 def bind_context(**kwargs: Any) -> None:
@@ -115,6 +116,7 @@ class JsonlFileHandler(logging.Handler):
         super().__init__()
         self.file_path = file_path
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         """Emit a record to the JSONL file."""
         try:
@@ -128,14 +130,16 @@ class JsonlFileHandler(logging.Handler):
                 "line": record.lineno,
                 "environment": settings.ENVIRONMENT.value,
             }
-            if hasattr(record, "extra"):
-                log_entry.update(record.extra)
+            extra = getattr(record, "extra", None)
+            if isinstance(extra, dict):
+                log_entry.update(extra)
 
             with open(self.file_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(log_entry) + "\n")
         except Exception:
             self.handleError(record)
 
+    @override
     def close(self) -> None:
         """Close the handler."""
         super().close()

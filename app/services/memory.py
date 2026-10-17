@@ -18,7 +18,7 @@ class MemoryService:
 
     def __init__(self):
         """Initialize the memory service."""
-        self._memory: AsyncMemory = None
+        self._memory: AsyncMemory | None = None
 
     async def _get_memory(self) -> AsyncMemory:
         if self._memory is None:
@@ -57,13 +57,17 @@ class MemoryService:
         await self._get_memory()
         logger.info("memory_service_initialized")
 
-    async def search(self, user_id: str, query: str) -> str:
+    async def search(self, user_id: str | None, query: str) -> str:
         """Search relevant memories for a user.
 
         Checks cache first; on miss, queries mem0 and caches the result.
 
-        Returns formatted memory string, or empty string on failure.
+        Returns formatted memory string, or empty string on failure or when
+        no user_id is supplied (anonymous sessions skip long-term memory
+        rather than pooling under a shared partition).
         """
+        if user_id is None:
+            return ""
         try:
             # Check cache first
             key = cache_key("memory", str(user_id), query)
@@ -85,14 +89,17 @@ class MemoryService:
             logger.error("failed_to_get_relevant_memory", error=str(e), user_id=user_id, query=query)
             return ""
 
-    async def add(self, user_id: str, messages: list[BaseMessage]) -> None:
+    async def add(self, user_id: str | None, messages: list[BaseMessage]) -> None:
         """Add the latest user turn to long-term memory.
 
         Only the latest user message is forwarded to mem0. The assistant reply
         is deliberately excluded: mem0's extractor concatenates both roles and
         paraphrases the assistant's suggestions as if the user had volunteered
-        them, producing noisy facts.
+        them, producing noisy facts. No-op when ``user_id`` is ``None`` (see
+        ``search`` for rationale).
         """
+        if user_id is None:
+            return
         user_text, _ = latest_turn_text(messages)
         user_text = (user_text or "").strip()
         if not user_text:

@@ -23,7 +23,7 @@ cp .env.example .env.development
 
 make install       # installs Python deps + pre-commit hooks
 make docker-up     # starts API (port 8000) + PostgreSQL
-make migrate       # runs Alembic migrations
+make docker-migrate # runs Alembic migrations inside the app container
 ```
 
 Open [http://localhost:8000/docs](http://localhost:8000/docs).
@@ -105,7 +105,13 @@ Hooks include: trailing whitespace, YAML/TOML/JSON validation, secret detection,
 ## Troubleshooting
 
 **Database connection error on startup**
-Make sure PostgreSQL is running and `POSTGRES_*` vars in your `.env` match. With Docker: `make docker-up` handles this.
+Make sure PostgreSQL is running and `POSTGRES_*` vars in your `.env` match. With Docker: `make docker-up` handles this (including migrations).
+
+**`could not translate host name "db"`**
+`POSTGRES_HOST=db` only resolves *inside* the Docker network (it's the Compose
+service name). If you run a command on your host (e.g. `make migrate` or `make dev`
+in the local-Python flow), set `POSTGRES_HOST=localhost` instead — the DB's port is
+published to the host via `docker-compose.yml`. Inside the container, keep `db`.
 
 **`detect-secrets` blocking a commit**
 If it's a false positive, add `# pragma: allowlist secret` to the end of the flagged line.

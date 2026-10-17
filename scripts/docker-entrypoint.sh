@@ -79,8 +79,7 @@ echo "Database User: $( [[ -n ${POSTGRES_USER:-${DB_USER:-}} ]] && echo 'set' ||
 echo "LLM Model: ${DEFAULT_LLM_MODEL:-Not set}"
 echo "Debug Mode: ${DEBUG:-false}"
 
-# Run database migrations if necessary
-# e.g., alembic upgrade head
+# Run migrations if necessary with `make docker-migrate`.
 
 # Execute the CMD
 exec "$@"

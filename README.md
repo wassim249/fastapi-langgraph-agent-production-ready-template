@@ -4,6 +4,97 @@ A production-ready template for building AI agent backends with FastAPI and Lang
 
 **Built for AI engineers** who want a solid foundation, not a tutorial project.
 
+---
+
+## Powered by Atlas Cloud — Drop-in LLM Backend for LangGraph Agents
+
+<div align="center">
+  <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/atlas-cloud-logo-dark.png"/>
+      <img src="docs/atlas-cloud-logo.png" alt="Atlas Cloud" width="200"/>
+    </picture>
+  </a>
+</div>
+
+[**Atlas Cloud**](https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template) provides an **OpenAI-compatible LLM API** that integrates seamlessly into this FastAPI + LangGraph template — no code changes to your agent graph needed. Just swap `OPENAI_BASE_URL` and `OPENAI_API_KEY` to access **DeepSeek, Qwen, GLM, Kimi, MiniMax, Gemini, Claude, GPT** and more through a single unified endpoint.
+
+The `LLMRegistry` in this template uses `langchain_openai.ChatOpenAI` — Atlas Cloud is wire-compatible, so you get instant access to 130+ curated models without touching any LangGraph logic.
+
+### Quick Setup
+
+**Step 1 — Get your free API key:** [atlascloud.ai/console/coding-plan](https://www.atlascloud.ai/console/coding-plan)
+
+**Step 2 — Update `.env.development`:**
+
+```env
+OPENAI_API_KEY=<your-atlascloud-key>
+OPENAI_BASE_URL=https://api.atlascloud.ai/v1
+DEFAULT_LLM_MODEL=deepseek-ai/deepseek-v4-pro
+```
+
+**Step 3 — Or use directly in code:**
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    model="deepseek-ai/deepseek-v4-pro",
+    openai_api_base="https://api.atlascloud.ai/v1",
+    openai_api_key="<your-atlascloud-key>",
+    max_tokens=512,  # reasoning model requires max_tokens >= 512
+)
+```
+
+This works as a drop-in replacement anywhere `ChatOpenAI` is used in your LangGraph agent — including the `LLMRegistry`, the circular fallback service, and mem0 long-term memory.
+
+<details>
+<summary>📋 Model catalog — a current selection (136 available in total)</summary>
+
+| Model ID | Provider |
+|---|---|
+| `openai/gpt-5.6-luna` | OpenAI |
+| `openai/gpt-5.6-sol` | OpenAI |
+| `openai/gpt-5.6-terra` | OpenAI |
+| `openai/gpt-5.5` | OpenAI |
+| `openai/gpt-5.4` | OpenAI |
+| `openai/gpt-5.4-mini` | OpenAI |
+| `openai/gpt-5.4-nano` | OpenAI |
+| `openai/gpt-5.3-codex` | OpenAI |
+| `openai/gpt-5.2` | OpenAI |
+| `anthropic/claude-opus-5` | Anthropic |
+| `anthropic/claude-sonnet-5` | Anthropic |
+| `anthropic/claude-opus-4.8` | Anthropic |
+| `anthropic/claude-sonnet-4.6` | Anthropic |
+| `anthropic/claude-haiku-4.5-20251001` | Anthropic |
+| `google/gemini-3.5-flash` | Google |
+| `google/gemini-3.1-pro-preview` | Google |
+| `google/gemini-3.1-flash-lite` | Google |
+| `google/gemini-2.5-pro` | Google |
+| `deepseek-ai/deepseek-v4-pro` | DeepSeek |
+| `deepseek-ai/deepseek-v4-flash` | DeepSeek |
+| `qwen/qwen3.8-max` | Alibaba Qwen |
+| `qwen/qwen3.7-plus` | Alibaba Qwen |
+| `qwen/qwen3.5-plus` | Alibaba Qwen |
+| `moonshotai/kimi-k3` | Moonshot AI |
+| `moonshotai/kimi-k2.7-code` | Moonshot AI |
+| `zai-org/glm-5.2` | Zhipu AI |
+| `zai-org/glm-5.1` | Zhipu AI |
+| `zai-org/glm-5` | Zhipu AI |
+| `minimaxai/minimax-m3` | MiniMax |
+| `minimaxai/minimax-m2.7` | MiniMax |
+| `xai/grok-4.6` | xAI |
+| `xai/grok-4.5` | xAI |
+| `bytedance/doubao-seed-2.1-pro-260628` | ByteDance |
+| `xiaomi/mimo-v2.5-pro` | Xiaomi |
+| `tencent/hy3` | Tencent |
+
+[View live model list →](https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=fastapi-langgraph-agent-production-ready-template)
+
+</details>
+
+---
+
 ## What's included
 
 - **LangGraph** stateful agent with checkpointing, tool calling, and human-in-the-loop support
@@ -70,3 +161,79 @@ Report security issues privately — see [SECURITY.md](SECURITY.md).
 ## License
 
 See [LICENSE](LICENSE).
+
+## FAQ
+
+### General
+
+**What is this template?**
+A production-ready foundation for AI agent backends built on FastAPI + LangGraph. It bundles the components you'd otherwise wire up by hand: stateful conversations, long-term memory, tool calling, observability, rate limiting, and JWT auth.
+
+**How does this differ from a basic LangGraph setup?**
+The base LangGraph quickstart stops at "agent runs locally". This template adds Alembic migrations, mem0 + pgvector long-term memory, Langfuse tracing, Prometheus + Grafana dashboards, JWT sessions, slowapi rate limiting, structured logging with per-request context, and a circular-fallback LLM service — production concerns you'd otherwise build separately.
+
+### Setup & Configuration
+
+**Do I need Docker?**
+Recommended but not required. `make docker-up` starts the API + PostgreSQL together. For local-only setup see [docs/getting-started.md](docs/getting-started.md).
+
+**Which LLM providers are supported?**
+Any provider LangChain's [`init_chat_model`](https://python.langchain.com/docs/how_to/chat_models_universal_init/) supports. The `LLMRegistry` in `app/services/llm/registry.py` builds every model through `init_chat_model`, so a bare name like `gpt-5.6-luna` keeps resolving to OpenAI unchanged, while a `provider:model` string (e.g. `anthropic:claude-opus-4-6`, `ollama:llama3`) adds any other provider. Install that provider's LangChain integration package — see the `anthropic` / `ollama` / `google-genai` extras in `pyproject.toml` — and set its API key via the provider's own env var (e.g. `ANTHROPIC_API_KEY`). Configure the default model via `DEFAULT_LLM_MODEL` in `.env.development`.
+
+```bash
+# uv sync with the anthropic extra installed
+uv sync --extra anthropic
+```
+
+```python
+# app/services/llm/registry.py
+LLM_CONFIGS: List[Dict[str, Any]] = [
+    {"name": "gpt-5.6-luna", "model": "gpt-5.6-luna", "kwargs": {...}},  # OpenAI, unchanged
+    {"name": "claude-opus", "model": "anthropic:claude-opus-4-6", "kwargs": {"temperature": 0.2}},
+]
+```
+
+**How do I configure long-term memory?**
+Long-term memory is self-hosted: mem0 runs in-process and persists into your existing PostgreSQL via pgvector — there is no separate mem0 cloud account or API key. You only need a working `OPENAI_API_KEY` (used for fact extraction + embeddings) and the pgvector extension enabled. See [docs/memory.md](docs/memory.md) for details.
+
+### Development
+
+**How do I add a custom tool?**
+Drop a LangChain `@tool`-decorated function in `app/core/langgraph/tools/` and register it in the `tools` list exported from that package. The agent picks it up on next start; no graph changes needed.
+
+**Can I run multiple agents (supervisor, sub-agents)?**
+Yes. The template ships a single agent, but any compiled graph can be added as a node of the main graph. It shares `GraphState` (so `messages` flow through) and inherits the parent's Postgres checkpointer, so no extra persistence setup is needed. In `create_graph()` in `app/core/langgraph/graph.py`:
+
+```python
+research = StateGraph(GraphState)
+research.add_node("research", research_node)
+research.set_entry_point("research")
+research_agent = research.compile()  # no checkpointer: inherits the parent's
+
+graph_builder.add_node("chat", self._chat, destinations=("tool_call", "research_agent", END))
+graph_builder.add_node("research_agent", research_agent)
+graph_builder.add_edge("research_agent", "chat")
+```
+
+`chat` then acts as the supervisor: return `Command(goto="research_agent")` to delegate, and the sub-agent's reply comes back to `chat`. Add one node per specialist. For a prebuilt version, see [`langgraph-supervisor`](https://github.com/langchain-ai/langgraph-supervisor-py).
+
+**How does the LLM service handle failures?**
+Two layers: (1) per-call exponential-backoff retry via `tenacity`, (2) **circular fallback** — if the active model exhausts its retries, the service rotates to the next model in `LLMRegistry` and continues. A total timeout budget caps the whole call so latency stays bounded. See [docs/llm-service.md](docs/llm-service.md).
+
+**Can I use this without Langfuse?**
+Yes. Set `LANGFUSE_TRACING_ENABLED=false` (or omit the Langfuse keys). The agent runs unchanged; structured logs still capture request/session/user context.
+
+### Troubleshooting
+
+**The API won't start**
+- Ensure PostgreSQL is running (`make docker-up` brings it up alongside the API)
+- Confirm `.env.development` exists — copy from `.env.example` and fill in required keys
+- Apply migrations: `make migrate`
+
+**Memory / semantic search returns nothing**
+- Verify the `pgvector` extension is enabled in your PostgreSQL instance
+- Confirm `OPENAI_API_KEY` is valid (mem0 calls OpenAI for fact extraction + embeddings)
+- Check `LONG_TERM_MEMORY_MODEL` and `LONG_TERM_MEMORY_EMBEDDER_MODEL` are set in `.env.development`
+
+**Rate limiting is too aggressive**
+Limits are defined in `app/core/limiter.py` (slowapi). Adjust per-route decorators or the default rate in that file. See [docs/configuration.md](docs/configuration.md) for the related env vars.

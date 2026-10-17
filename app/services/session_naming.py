@@ -9,11 +9,12 @@ On the first message of a new session this module:
      structured output to generate a proper title and overwrites the placeholder.
 """
 
-import asyncio
-
 from langchain_core.messages import HumanMessage, SystemMessage
-from sqlmodel import Session as DBSession
-from sqlmodel import update
+from sqlmodel import (
+    Session as DBSession,
+    col,
+    update,
+)
 
 from app.core.logging import logger
 from app.core.metrics import session_names_generated_total
@@ -22,10 +23,9 @@ from app.models.session import Session as ChatSession
 from app.schemas.chat import SessionTitle
 from app.services.database import database_service
 from app.services.llm import llm_service
+from app.utils.tasks import create_background_task
 
 _PLACEHOLDER_MAX = 40
-
-_background_tasks: set[asyncio.Task] = set()
 
 
 def _build_placeholder(user_message: str) -> str:
@@ -40,7 +40,11 @@ def _claim_session(session_id: str, placeholder: str) -> bool:
     concurrent caller receives rowcount == 1.
     """
     with DBSession(database_service.engine) as db:
-        stmt = update(ChatSession).where(ChatSession.id == session_id, ChatSession.name == "").values(name=placeholder)
+        stmt = (
+            update(ChatSession)
+            .where(col(ChatSession.id) == session_id, col(ChatSession.name) == "")
+            .values(name=placeholder)
+        )
         result = db.exec(stmt)
         db.commit()
         return (result.rowcount or 0) == 1
@@ -79,6 +83,4 @@ def maybe_name_session(session_id: str, session_name: str, messages: list) -> No
     if not first_user_msg:
         return
     if _claim_session(session_id, _build_placeholder(first_user_msg)):
-        task = asyncio.create_task(_persist_session_name(session_id, first_user_msg))
-        _background_tasks.add(task)
-        task.add_done_callback(_background_tasks.discard)
+        create_background_task(_persist_session_name(session_id, first_user_msg))

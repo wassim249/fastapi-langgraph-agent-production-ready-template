@@ -13,8 +13,8 @@ from app.core.logging import logger
 api_router = APIRouter()
 
 # Include routers
-api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
-api_router.include_router(chatbot_router, prefix="/chatbot", tags=["chatbot"])
+api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
+api_router.include_router(chatbot_router, prefix="/chatbot", tags=["Chatbot"])
 
 
 @api_router.get("/health")

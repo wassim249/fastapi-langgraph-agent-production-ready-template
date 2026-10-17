@@ -1,6 +1,5 @@
 """Evaluator for evals."""
 
-import asyncio
 import os
 import sys
 import time
@@ -83,6 +82,10 @@ class Evaluator:
             for metric in tqdm(metrics, desc=f"Applying metrics to trace {trace_id[:8]}...", leave=False):
                 metric_name = metric["name"]
                 input, output = get_input_output(trace)
+                if input is None or output is None:
+                    update_failure_metrics(self.report, trace_id, metric_name, trace_results)
+                    trace_results[trace_id]["metrics_evaluated"] += 1
+                    continue
                 score = await self._run_metric_evaluation(metric, input, output)
 
                 if score:

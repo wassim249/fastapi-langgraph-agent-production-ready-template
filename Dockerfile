@@ -22,12 +22,13 @@ RUN apt-get update && apt-get install -y \
     && pip install uv \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy pyproject.toml first to leverage Docker cache
-COPY pyproject.toml .
-RUN uv venv && . .venv/bin/activate && uv pip install -e .
+# Install locked dependencies first (cached unless pyproject.toml / uv.lock change)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
 
-# Copy the application
+# Copy the application and install the project itself against the locked deps
 COPY . .
+RUN uv sync --frozen
 
 # Make entrypoint script executable - do this before changing user
 RUN chmod +x /app/scripts/docker-entrypoint.sh

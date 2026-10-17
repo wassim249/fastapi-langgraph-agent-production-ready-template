@@ -33,7 +33,7 @@ from app.schemas.auth import (
     UserCreate,
     UserResponse,
 )
-from app.services.database import DatabaseService
+from app.services.database import database_service
 from app.utils.auth import (
     create_access_token,
     verify_token,
@@ -46,7 +46,9 @@ from app.utils.sanitization import (
 
 router = APIRouter()
 security = HTTPBearer()
-db_service = DatabaseService()
+# Reuse the shared instance: DatabaseService.__init__ builds its own engine, so a
+# second instance here meant two independent connection pools.
+db_service = database_service
 
 
 async def get_current_user(
@@ -217,8 +219,7 @@ async def login(
     """
     try:
         # Sanitize inputs
-        email = sanitize_string(email)
-        password = sanitize_string(password)
+        email = sanitize_string(email).lower()
         grant_type = sanitize_string(grant_type)
 
         # Verify grant type

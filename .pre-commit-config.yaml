@@ -30,3 +30,14 @@ repos:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
+
+  # Pyright: static type checker (runs in project venv via uv)
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright
+        entry: uv run pyright
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true

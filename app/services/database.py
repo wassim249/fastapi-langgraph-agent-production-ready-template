@@ -4,12 +4,14 @@ from typing import (
     List,
     Optional,
 )
+from urllib.parse import quote_plus
 
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 from sqlmodel import (
     Session,
+    col,
     create_engine,
     select,
 )
@@ -39,7 +41,8 @@ class DatabaseService:
 
             # Create engine with appropriate pool configuration
             connection_url = (
-                f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+                "postgresql://"
+                f"{quote_plus(settings.POSTGRES_USER)}:{quote_plus(settings.POSTGRES_PASSWORD)}"
                 f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
             )
 
@@ -194,9 +197,11 @@ class DatabaseService:
             List[ChatSession]: List of user's sessions
         """
         with Session(self.engine) as session:
-            statement = select(ChatSession).where(ChatSession.user_id == user_id).order_by(ChatSession.created_at)
+            statement = (
+                select(ChatSession).where(col(ChatSession.user_id) == user_id).order_by(col(ChatSession.created_at))
+            )
             sessions = session.exec(statement).all()
-            return sessions
+            return list(sessions)
 
     async def update_session_name(self, session_id: str, name: str) -> ChatSession:
         """Update a session's name.

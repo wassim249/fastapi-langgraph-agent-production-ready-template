@@ -6,19 +6,30 @@ Otherwise, falls back to a simple in-memory TTL cache.
 
 import hashlib
 import time
-from typing import Optional
+from typing import (
+    TYPE_CHECKING,
+    Awaitable,
+    Optional,
+    cast,
+)
 
 from app.core.config import settings
 from app.core.logging import logger
 
 # Try to import redis — it's an optional dependency
-try:
-    from redis.asyncio import Redis
+if TYPE_CHECKING:
+    from redis.asyncio import Redis  # pyright: ignore[reportMissingImports]
 
     REDIS_AVAILABLE = True
-except ImportError:
-    logger.debug("redis_not_available")
-    REDIS_AVAILABLE = False
+else:
+    try:
+        from redis.asyncio import Redis
+
+        REDIS_AVAILABLE = True
+    except ImportError:
+        logger.debug("redis_not_available")
+        Redis = None
+        REDIS_AVAILABLE = False
 
 
 class InMemoryCacheService:
@@ -93,7 +104,7 @@ class ValkeyCacheService:
 
     async def initialize(self) -> None:
         """Connect to Redis/Valkey server."""
-        self._client = Redis(
+        client = Redis(
             host=settings.VALKEY_HOST,
             port=settings.VALKEY_PORT,
             db=settings.VALKEY_DB,
@@ -101,8 +112,8 @@ class ValkeyCacheService:
             max_connections=settings.VALKEY_MAX_CONNECTIONS,
             decode_responses=True,
         )
-        # Verify connection
-        await self._client.ping()
+        await cast(Awaitable[bool], client.ping())
+        self._client = client
         logger.info(
             "cache_initialized",
             backend="redis",

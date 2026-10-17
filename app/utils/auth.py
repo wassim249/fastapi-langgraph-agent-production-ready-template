@@ -72,7 +72,7 @@ def verify_token(token: str) -> Optional[str]:
 
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        thread_id: str = payload.get("sub")
+        thread_id: str | None = payload.get("sub")
         if thread_id is None:
             logger.warning("token_missing_thread_id")
             return None
