@@ -265,6 +265,76 @@ class LangGraphAgent:
             self._graph = await self.create_graph()
         return self._graph
 
+    @staticmethod
+    def _interrupt_text(state: StateSnapshot) -> str:
+        """Return the question of the pending interrupt, as shown to the user."""
+        return str(state.interrupts[0].value) if state.interrupts else "Waiting for input."
+
+    async def _build_graph_input(
+        self,
+        graph: CompiledStateGraph,
+        config: RunnableConfig,
+        state: StateSnapshot,
+        messages: list[Message],
+        relevant_memory: str,
+    ) -> Command | dict:
+        """Decide whether this turn resumes an interrupt or starts a new run.
+
+        ``state.next`` is not enough to tell the two apart: it is also set when
+        the previous run failed inside a node (e.g. every LLM in the registry
+        errored, or a tool raised). Resuming such a run would drop the user's
+        new message and answer the previous one again, so only a pending
+        ``interrupt()`` is resumed and a failed run is replaced by a new one.
+        A failed task wins over an interrupt: when an ``ask_human`` answer is
+        followed by a tool failure in the same step, the answered interrupt is
+        still listed next to the task error. This relies on the graph running
+        one node per step (parallel tool calls share the single ``tool_call``
+        task), so an errored step can't also hold a new, unanswered interrupt.
+        """
+        session_id = config.get("configurable", {}).get("thread_id")
+        failed = any(task.error for task in state.tasks)
+
+        if state.interrupts and not failed:
+            logger.info("resuming_interrupted_graph", session_id=session_id, next_nodes=state.next)
+            return Command(resume=messages[-1].content)
+
+        if failed or state.next:
+            logger.warning("discarding_failed_graph_run", session_id=session_id, next_nodes=state.next)
+            await self._close_dangling_tool_calls(graph, config, state)
+
+        return {
+            "messages": dump_messages(messages),
+            "long_term_memory": relevant_memory or "No relevant memory found.",
+        }
+
+    async def _close_dangling_tool_calls(
+        self, graph: CompiledStateGraph, config: RunnableConfig, state: StateSnapshot
+    ) -> None:
+        """Answer the tool calls of a failed ``tool_call`` node with error results.
+
+        Without this the checkpoint keeps an assistant message whose tool calls
+        have no tool results, and providers reject every later request for the
+        session with that history. The node writes all its results at once, so
+        a failed run leaves either all of the last message's calls unanswered
+        or none.
+        """
+        if not state.values.get("messages"):
+            return
+        last_message = state.values["messages"][-1]
+        if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
+            return
+
+        error_results = [
+            ToolMessage(
+                content="Error: the tool call failed and returned no result.",
+                name=tool_call["name"],
+                tool_call_id=tool_call["id"],
+                status="error",
+            )
+            for tool_call in last_message.tool_calls
+        ]
+        await graph.aupdate_state(config, {"messages": error_results}, as_node="tool_call")
+
     async def get_response(
         self,
         messages: list[Message],
@@ -304,33 +374,23 @@ class LangGraphAgent:
                 memory_service.search(user_id, messages[-1].content),
             )
 
-            if state.next:
-                logger.info("resuming_interrupted_graph", session_id=session_id, next_nodes=state.next)
-                response = await graph.ainvoke(
-                    Command(resume=messages[-1].content),
-                    config=config,
-                )
-            else:
-                relevant_memory = relevant_memory or "No relevant memory found."
-                response = await graph.ainvoke(
-                    input={"messages": dump_messages(messages), "long_term_memory": relevant_memory},
-                    config=config,
-                )
+            graph_input = await self._build_graph_input(graph, config, state, messages, relevant_memory)
+            response = await graph.ainvoke(graph_input, config=config)
 
             # Check if the graph was interrupted during this invocation
             state = await graph.aget_state(config)
-            if state.next:
-                interrupt_value = state.tasks[0].interrupts[0].value if state.tasks else "Waiting for input."
-                logger.info("graph_interrupted", session_id=session_id, interrupt_value=str(interrupt_value))
-                return [Message(role="assistant", content=str(interrupt_value))]
+            if state.interrupts:
+                interrupt_value = self._interrupt_text(state)
+                logger.info("graph_interrupted", session_id=session_id, interrupt_value=interrupt_value)
+                return [Message(role="assistant", content=interrupt_value)]
 
             create_background_task(memory_service.add(user_id, response["messages"]))
             return self.__process_messages(response["messages"])
         except GraphInterrupt:
             state = await graph.aget_state(config)
-            interrupt_value = state.tasks[0].interrupts[0].value if state.tasks else "Waiting for input."
-            logger.info("graph_interrupted", session_id=session_id, interrupt_value=str(interrupt_value))
-            return [Message(role="assistant", content=str(interrupt_value))]
+            interrupt_value = self._interrupt_text(state)
+            logger.info("graph_interrupted", session_id=session_id, interrupt_value=interrupt_value)
+            return [Message(role="assistant", content=interrupt_value)]
         except Exception as e:
             logger.exception("get_response_failed", error=str(e), session_id=session_id)
             raise
@@ -374,12 +434,7 @@ class LangGraphAgent:
                 memory_service.search(user_id, messages[-1].content),
             )
 
-            if state.next:
-                logger.info("resuming_interrupted_graph_stream", session_id=session_id, next_nodes=state.next)
-                graph_input = Command(resume=messages[-1].content)
-            else:
-                relevant_memory = relevant_memory or "No relevant memory found."
-                graph_input = {"messages": dump_messages(messages), "long_term_memory": relevant_memory}
+            graph_input = await self._build_graph_input(graph, config, state, messages, relevant_memory)
 
             async for token, _ in graph.astream(
                 graph_input,
@@ -395,17 +450,17 @@ class LangGraphAgent:
 
             # After streaming completes, check for interrupt or update memory
             state = await graph.aget_state(config)
-            if state.next:
-                interrupt_value = state.tasks[0].interrupts[0].value if state.tasks else "Waiting for input."
-                logger.info("graph_interrupted_stream", session_id=session_id, interrupt_value=str(interrupt_value))
-                yield str(interrupt_value)
+            if state.interrupts:
+                interrupt_value = self._interrupt_text(state)
+                logger.info("graph_interrupted_stream", session_id=session_id, interrupt_value=interrupt_value)
+                yield interrupt_value
             elif state.values and "messages" in state.values:
                 create_background_task(memory_service.add(user_id, state.values["messages"]))
         except GraphInterrupt:
             state = await graph.aget_state(config)
-            interrupt_value = state.tasks[0].interrupts[0].value if state.tasks else "Waiting for input."
-            logger.info("graph_interrupted_stream", session_id=session_id, interrupt_value=str(interrupt_value))
-            yield str(interrupt_value)
+            interrupt_value = self._interrupt_text(state)
+            logger.info("graph_interrupted_stream", session_id=session_id, interrupt_value=interrupt_value)
+            yield interrupt_value
         except Exception as stream_error:
             logger.exception("stream_processing_failed", error=str(stream_error), session_id=session_id)
             raise stream_error
